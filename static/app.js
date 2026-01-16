@@ -521,3 +521,489 @@ function showError(message) {
     document.body.appendChild(div);
     setTimeout(() => div.remove(), 3000);
 }
+
+// Load demo examples
+function loadExample(type) {
+    const examples = {
+        population: {
+            title: "Population Growth Dynamics",
+            description: "Demonstration of exponential population growth through reinforcing feedback loops",
+            causes: [
+                { description: "Birth Rate", type: "primary" },
+                { description: "Population Size", type: "primary" },
+                { description: "Available Resources", type: "secondary" }
+            ],
+            impacts: [
+                { description: "Resource Depletion", type: "environmental" },
+                { description: "Economic Growth", type: "business" },
+                { description: "Urban Expansion", type: "operational" }
+            ],
+            feedback_loops: [
+                {
+                    description: "Population Reinforcing Loop",
+                    type: "reinforcing",
+                    relationships: ["Population Size", "Birth Rate", "Population Size"]
+                }
+            ],
+            remediations: [
+                { description: "Family Planning Education", type: "preventive" },
+                { description: "Resource Management", type: "long_term" }
+            ]
+        },
+        market: {
+            title: "Market Supply-Demand Dynamics",
+            description: "Balancing feedback loop showing how markets reach equilibrium through price mechanisms",
+            causes: [
+                { description: "Supply Shortage", type: "primary" },
+                { description: "High Demand", type: "primary" },
+                { description: "Price Elasticity", type: "secondary" }
+            ],
+            impacts: [
+                { description: "Price Increase", type: "business" },
+                { description: "Reduced Demand", type: "operational" },
+                { description: "Market Equilibrium", type: "business" }
+            ],
+            feedback_loops: [
+                {
+                    description: "Price Balancing Loop",
+                    type: "balancing",
+                    relationships: ["Price", "Demand", "Supply", "Price"]
+                }
+            ],
+            remediations: [
+                { description: "Supply Chain Optimization", type: "short_term" },
+                { description: "Market Monitoring", type: "preventive" }
+            ]
+        },
+        burnout: {
+            title: "Employee Burnout Cycle",
+            description: "Complex system showing how work pressure leads to burnout through multiple feedback loops",
+            causes: [
+                { description: "High Workload", type: "primary" },
+                { description: "Time Pressure", type: "primary" },
+                { description: "Lack of Support", type: "secondary" },
+                { description: "Unclear Expectations", type: "latent" }
+            ],
+            impacts: [
+                { description: "Decreased Performance", type: "operational" },
+                { description: "Health Issues", type: "technical" },
+                { description: "Employee Turnover", type: "business" }
+            ],
+            feedback_loops: [
+                {
+                    description: "Work Pressure Reinforcing Loop",
+                    type: "reinforcing",
+                    relationships: ["Workload", "Stress", "Reduced Performance", "More Workload"]
+                },
+                {
+                    description: "Recovery Balancing Loop",
+                    type: "balancing",
+                    relationships: ["Burnout", "Rest Time", "Recovery", "Burnout"]
+                }
+            ],
+            remediations: [
+                { description: "Workload Redistribution", type: "short_term" },
+                { description: "Mental Health Support", type: "long_term" },
+                { description: "Process Optimization", type: "preventive" }
+            ]
+        },
+        climate: {
+            title: "Climate Change Feedback Loops",
+            description: "Environmental system demonstrating dangerous reinforcing loops in climate change",
+            causes: [
+                { description: "CO2 Emissions", type: "primary" },
+                { description: "Deforestation", type: "primary" },
+                { description: "Industrial Activity", type: "secondary" }
+            ],
+            impacts: [
+                { description: "Global Temperature Rise", type: "environmental" },
+                { description: "Extreme Weather Events", type: "operational" },
+                { description: "Ecosystem Disruption", type: "environmental" }
+            ],
+            feedback_loops: [
+                {
+                    description: "Ice-Albedo Reinforcing Loop",
+                    type: "reinforcing",
+                    relationships: ["Temperature", "Ice Melt", "Albedo Decrease", "Temperature"]
+                },
+                {
+                    description: "Permafrost Reinforcing Loop",
+                    type: "reinforcing",
+                    relationships: ["Temperature", "Permafrost Thaw", "Methane Release", "Temperature"]
+                }
+            ],
+            remediations: [
+                { description: "Renewable Energy Transition", type: "long_term" },
+                { description: "Reforestation Programs", type: "preventive" },
+                { description: "Carbon Capture Technology", type: "long_term" }
+            ]
+        },
+        addiction: {
+            title: "Social Media Addiction",
+            description: "Psychological feedback loops driving social media addiction and digital wellness",
+            causes: [
+                { description: "Dopamine Release", type: "primary" },
+                { description: "Variable Rewards", type: "primary" },
+                { description: "Social Validation", type: "secondary" }
+            ],
+            impacts: [
+                { description: "Reduced Attention Span", type: "technical" },
+                { description: "Sleep Disruption", type: "health" },
+                { description: "Social Isolation", type: "operational" }
+            ],
+            feedback_loops: [
+                {
+                    description: "Dopamine Reinforcing Loop",
+                    type: "reinforcing",
+                    relationships: ["Social Media Use", "Dopamine Release", "Craving", "Social Media Use"]
+                },
+                {
+                    description: "Wellness Balancing Loop",
+                    type: "balancing",
+                    relationships: ["Addiction", "Negative Consequences", "Awareness", "Reduced Use", "Addiction"]
+                }
+            ],
+            remediations: [
+                { description: "Digital Detox Periods", type: "short_term" },
+                { description: "Mindfulness Training", type: "long_term" },
+                { description: "App Usage Limits", type: "preventive" }
+            ]
+        },
+        tutorial: {
+            title: "Learn Causal Loop Diagramming",
+            description: "Interactive tutorial for mastering systems thinking and causal loop modeling",
+            causes: [
+                { description: "🎯 Identify Key Variables", type: "primary" },
+                { description: "🔗 Map Relationships", type: "primary" },
+                { description: "🔄 Find Feedback Loops", type: "secondary" },
+                { description: "⚖️ Balance vs Reinforce", type: "secondary" }
+            ],
+            impacts: [
+                { description: "🧠 Better System Understanding", type: "educational" },
+                { description: "🎯 Effective Problem Solving", type: "operational" },
+                { description: "💡 Clear Communication", type: "business" },
+                { description: "📈 Improved Decision Making", type: "business" }
+            ],
+            feedback_loops: [
+                {
+                    description: "📚 Learning Reinforcing Loop",
+                    type: "reinforcing",
+                    relationships: ["Practice", "Understanding", "Better Models", "More Practice"]
+                },
+                {
+                    description: "🎯 Skill Development Balancing Loop",
+                    type: "balancing",
+                    relationships: ["Complexity", "Challenge", "Learning", "Skill Level", "Complexity"]
+                }
+            ],
+            remediations: [
+                { description: "📖 Start with Simple Models", type: "preventive" },
+                { description: "👥 Get Feedback from Others", type: "short_term" },
+                { description: "🌍 Study Real-World Examples", type: "long_term" },
+                { description: "🔄 Iterate and Refine", type: "preventive" }
+            ]
+        }
+    };
+
+    const example = examples[type];
+    if (!example) return;
+
+    // Show sections
+    document.getElementById('detailsSection').classList.remove('hidden');
+    document.getElementById('diagramSection').classList.remove('hidden');
+    
+    // Display example details
+    document.getElementById('problemTitle').textContent = example.title;
+    displayCauses(example.causes || []);
+    displayImpacts(example.impacts || []);
+    displayLoops(example.feedback_loops || []);
+    displayRemediations(example.remediations || []);
+    
+    // Create enhanced diagram for examples
+    createExampleDiagram(example, type);
+    
+    // Add educational content for tutorial
+    if (type === 'tutorial') {
+        addTutorialContent();
+    }
+    
+    // Scroll to details
+    document.getElementById('detailsSection').scrollIntoView({ behavior: 'smooth' });
+    
+    // Show notification
+    showSuccess(`Loaded ${example.title} example`);
+}
+
+// Add educational tutorial content
+function addTutorialContent() {
+    const detailsSection = document.getElementById('detailsSection');
+    
+    // Check if tutorial content already exists
+    if (document.getElementById('tutorialContent')) {
+        return;
+    }
+    
+    const tutorialDiv = document.createElement('div');
+    tutorialDiv.id = 'tutorialContent';
+    tutorialDiv.className = 'mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200';
+    tutorialDiv.innerHTML = `
+        <h3 class="text-xl font-semibold mb-4 text-blue-800">
+            <i class="fas fa-graduation-cap mr-2"></i>Understanding Causal Loop Diagrams
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h4 class="font-semibold mb-2 text-blue-700">🔄 Reinforcing Loops (R)</h4>
+                <p class="text-sm text-gray-700 mb-3">
+                    Reinforcing loops amplify change, creating exponential growth or decline. 
+                    They represent virtuous or vicious cycles where more leads to more.
+                </p>
+                <div class="bg-white p-3 rounded border border-blue-200">
+                    <strong>Examples:</strong> Population growth, learning curves, compound interest
+                </div>
+            </div>
+            
+            <div>
+                <h4 class="font-semibold mb-2 text-orange-700">⚖️ Balancing Loops (B)</h4>
+                <p class="text-sm text-gray-700 mb-3">
+                    Balancing loops stabilize systems, creating equilibrium or goal-seeking behavior. 
+                    They counteract change to maintain balance.
+                </p>
+                <div class="bg-white p-3 rounded border border-orange-200">
+                    <strong>Examples:</strong> Thermostat control, market equilibrium, hunger regulation
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+            <h4 class="font-semibold mb-2 text-yellow-800">
+                <i class="fas fa-lightbulb mr-2"></i>Quick Start Guide
+            </h4>
+            <ol class="text-sm text-gray-700 space-y-1">
+                <li><strong>1. Identify Variables:</strong> List key factors that influence your problem</li>
+                <li><strong>2. Map Relationships:</strong> Draw arrows showing cause-and-effect links</li>
+                <li><strong>3. Find Loops:</strong> Look for circular relationships that close back on themselves</li>
+                <li><strong>4. Label Loops:</strong> Mark reinforcing loops (R) and balancing loops (B)</li>
+                <li><strong>5. Analyze:</strong> Identify leverage points for intervention</li>
+            </ol>
+        </div>
+        
+        <div class="mt-4 flex gap-2">
+            <button onclick="startInteractiveTutorial()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                <i class="fas fa-play mr-2"></i>Start Interactive Tutorial
+            </button>
+            <button onclick="loadExample('population')" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                <i class="fas fa-eye mr-2"></i>View Simple Example
+            </button>
+        </div>
+    `;
+    
+    detailsSection.appendChild(tutorialDiv);
+}
+
+// Start interactive tutorial
+function startInteractiveTutorial() {
+    showSuccess('Interactive tutorial started! Follow the step-by-step guidance.');
+    // Here you could add more sophisticated tutorial logic
+    // For now, we'll just show a simple walkthrough
+    setTimeout(() => {
+        showTutorialStep(1);
+    }, 1000);
+}
+
+// Show tutorial steps
+function showTutorialStep(step) {
+    const steps = [
+        {
+            title: "Step 1: Identify Your Problem",
+            content: "Start by clearly defining the problem you want to analyze. What's the core issue?",
+            action: "Try creating a new problem using the 'New Problem' button above."
+        },
+        {
+            title: "Step 2: Find Root Causes",
+            content: "Brainstorm all possible causes. Categorize them as primary (direct), secondary (indirect), or latent (hidden).",
+            action: "Add at least 2-3 causes to understand the full scope."
+        },
+        {
+            title: "Step 3: Map Impacts",
+            content: "Identify all effects and consequences. Consider technical, business, and operational impacts.",
+            action: "Think about both short-term and long-term consequences."
+        },
+        {
+            title: "Step 4: Discover Feedback Loops",
+            content: "Look for circular relationships where causes become effects and effects become causes.",
+            action: "Ask: 'What happens if this continues?' to find reinforcing loops."
+        },
+        {
+            title: "Step 5: Plan Solutions",
+            content: "Develop short-term fixes, long-term solutions, and preventive measures.",
+            action: "Target the most influential leverage points in your system."
+        }
+    ];
+    
+    if (step <= steps.length) {
+        const currentStep = steps[step - 1];
+        const message = `${currentStep.title}: ${currentStep.content} ${currentStep.action}`;
+        showSuccess(message);
+        
+        if (step < steps.length) {
+            setTimeout(() => {
+                showTutorialStep(step + 1);
+            }, 5000);
+        } else {
+            showSuccess('Tutorial completed! You now have the basics to create effective causal loop diagrams.');
+        }
+    }
+}
+
+// Create enhanced diagram for examples
+function createExampleDiagram(example, type) {
+    const container = document.getElementById('causalDiagram');
+    
+    // Create nodes with better positioning for examples
+    const nodes = new vis.DataSet([
+        { id: 'problem', label: example.title, color: '#ef4444', shape: 'box', font: { size: 14, bold: true } }
+    ]);
+    
+    const edges = new vis.DataSet([]);
+    
+    // Add cause nodes with specific colors
+    (example.causes || []).forEach((cause, index) => {
+        const angle = (index * 120) - 60; // Spread causes in an arc
+        const radius = 200;
+        const x = Math.cos(angle * Math.PI / 180) * radius;
+        const y = Math.sin(angle * Math.PI / 180) * radius;
+        
+        nodes.add({
+            id: `cause_${index}`,
+            label: cause.description,
+            color: cause.type === 'primary' ? '#dc2626' : cause.type === 'secondary' ? '#f59e0b' : '#6b7280',
+            shape: 'ellipse',
+            x: x,
+            y: y - 100,
+            font: { size: 12 }
+        });
+        edges.add({
+            from: `cause_${index}`,
+            to: 'problem',
+            arrows: 'to',
+            color: { color: '#6b7280' },
+            width: 2
+        });
+    });
+    
+    // Add impact nodes
+    (example.impacts || []).forEach((impact, index) => {
+        const angle = (index * 120) - 60;
+        const radius = 200;
+        const x = Math.cos(angle * Math.PI / 180) * radius;
+        const y = Math.sin(angle * Math.PI / 180) * radius;
+        
+        nodes.add({
+            id: `impact_${index}`,
+            label: impact.description,
+            color: impact.type === 'technical' ? '#2563eb' : impact.type === 'business' ? '#059669' : impact.type === 'operational' ? '#7c3aed' : impact.type === 'environmental' ? '#10b981' : impact.type === 'health' ? '#ec4899' : '#6b7280',
+            shape: 'ellipse',
+            x: x,
+            y: y + 100,
+            font: { size: 12 }
+        });
+        edges.add({
+            from: 'problem',
+            to: `impact_${index}`,
+            arrows: 'to',
+            color: { color: '#6b7280' },
+            width: 2
+        });
+    });
+    
+    // Add feedback loop edges with enhanced styling
+    (example.feedback_loops || []).forEach((loop, loopIndex) => {
+        if (loop.relationships && loop.relationships.length > 1) {
+            const loopColor = loop.type === 'reinforcing' ? '#16a34a' : '#d97706';
+            
+            for (let i = 0; i < loop.relationships.length - 1; i++) {
+                const fromNode = loop.relationships[i].replace(/\s+/g, '_');
+                const toNode = loop.relationships[i + 1].replace(/\s+/g, '_');
+                
+                // Create intermediate nodes for loop relationships if they don't exist
+                if (!nodes.get(fromNode)) {
+                    nodes.add({
+                        id: fromNode,
+                        label: loop.relationships[i],
+                        color: '#fbbf24',
+                        shape: 'box',
+                        font: { size: 11 }
+                    });
+                }
+                
+                if (!nodes.get(toNode)) {
+                    nodes.add({
+                        id: toNode,
+                        label: loop.relationships[i + 1],
+                        color: '#fbbf24',
+                        shape: 'box',
+                        font: { size: 11 }
+                    });
+                }
+                
+                edges.add({
+                    from: fromNode,
+                    to: toNode,
+                    arrows: 'to',
+                    color: { color: loopColor },
+                    width: 3,
+                    label: `${loop.type === 'reinforcing' ? 'R' : 'B'}${loopIndex + 1}`,
+                    font: { size: 12, bold: true, color: loopColor }
+                });
+            }
+        }
+    });
+    
+    const data = { nodes, edges };
+    const options = {
+        layout: {
+            improvedLayout: true,
+            hierarchical: {
+                enabled: false
+            }
+        },
+        physics: {
+            enabled: true,
+            barnesHut: {
+                gravitationalConstant: -2000,
+                centralGravity: 0.3,
+                springLength: 150,
+                springConstant: 0.04,
+                damping: 0.09
+            }
+        },
+        interaction: {
+            hover: true,
+            tooltipDelay: 200,
+            zoomView: true,
+            dragView: true
+        },
+        nodes: {
+            borderWidth: 2,
+            shadow: true
+        },
+        edges: {
+            smooth: {
+                type: 'curvedCW',
+                roundness: 0.2
+            },
+            shadow: true
+        }
+    };
+    
+    if (network) {
+        network.destroy();
+    }
+    network = new vis.Network(container, data, options);
+    
+    // Fit the network to show all nodes
+    network.once('stabilized', function() {
+        network.fit();
+    });
+}

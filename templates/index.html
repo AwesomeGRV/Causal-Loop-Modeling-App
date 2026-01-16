@@ -28,9 +28,41 @@
         .impact-technical { border-left: 4px solid #2563eb; }
         .impact-business { border-left: 4px solid #059669; }
         .impact-operational { border-left: 4px solid #7c3aed; }
+        .impact-environmental { border-left: 4px solid #10b981; }
+        .impact-health { border-left: 4px solid #ec4899; }
+        .impact-educational { border-left: 4px solid #8b5cf6; }
         .remediation-short { border-left: 4px solid #0891b2; }
         .remediation-long { border-left: 4px solid #be123c; }
         .remediation-preventive { border-left: 4px solid #4f46e5; }
+        
+        /* Enhanced example card styles */
+        .example-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .example-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-color: #3b82f6;
+        }
+        
+        /* Enhanced diagram styles */
+        .causal-diagram {
+            height: 500px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+        }
+        
+        /* Loading animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .loading {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -44,6 +76,87 @@
         </header>
 
         <main>
+            <!-- Examples Section -->
+            <section class="mb-8">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-lightbulb mr-2"></i>Demo Examples & Tutorials
+                    </h2>
+                    <p class="text-gray-600 mb-4">Explore pre-built causal loop diagrams to understand common patterns and real-world scenarios.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="example-card border border-gray-200 rounded-lg p-4 cursor-pointer" onclick="loadExample('population')">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-users text-blue-600 mr-2"></i>
+                                <h3 class="font-semibold">Population Growth</h3>
+                            </div>
+                            <p class="text-gray-600 text-sm">Reinforcing loop showing exponential population growth dynamics</p>
+                            <div class="mt-2">
+                                <span class="loop-badge reinforcing">R1</span>
+                            </div>
+                        </div>
+                        
+                        <div class="example-card border border-gray-200 rounded-lg p-4 cursor-pointer" onclick="loadExample('market')">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-chart-line text-green-600 mr-2"></i>
+                                <h3 class="font-semibold">Market Dynamics</h3>
+                            </div>
+                            <p class="text-gray-600 text-sm">Supply and demand balancing loop with price mechanisms</p>
+                            <div class="mt-2">
+                                <span class="loop-badge balancing">B1</span>
+                            </div>
+                        </div>
+                        
+                        <div class="example-card border border-gray-200 rounded-lg p-4 cursor-pointer" onclick="loadExample('burnout')">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-fire text-red-600 mr-2"></i>
+                                <h3 class="font-semibold">Employee Burnout</h3>
+                            </div>
+                            <p class="text-gray-600 text-sm">Complex system with reinforcing and balancing loops</p>
+                            <div class="mt-2">
+                                <span class="loop-badge reinforcing">R1</span>
+                                <span class="loop-badge balancing">B1</span>
+                            </div>
+                        </div>
+                        
+                        <div class="example-card border border-gray-200 rounded-lg p-4 cursor-pointer" onclick="loadExample('climate')">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-globe text-purple-600 mr-2"></i>
+                                <h3 class="font-semibold">Climate Change</h3>
+                            </div>
+                            <p class="text-gray-600 text-sm">Environmental feedback loops and tipping points</p>
+                            <div class="mt-2">
+                                <span class="loop-badge reinforcing">R1</span>
+                                <span class="loop-badge reinforcing">R2</span>
+                            </div>
+                        </div>
+                        
+                        <div class="example-card border border-gray-200 rounded-lg p-4 cursor-pointer" onclick="loadExample('addiction')">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-exclamation-triangle text-orange-600 mr-2"></i>
+                                <h3 class="font-semibold">Social Media Addiction</h3>
+                            </div>
+                            <p class="text-gray-600 text-sm">Dopamine-driven reinforcing loop with balancing factors</p>
+                            <div class="mt-2">
+                                <span class="loop-badge reinforcing">R1</span>
+                                <span class="loop-badge balancing">B1</span>
+                            </div>
+                        </div>
+                        
+                        <div class="example-card border border-gray-200 rounded-lg p-4 cursor-pointer" onclick="loadExample('tutorial')">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-graduation-cap text-indigo-600 mr-2"></i>
+                                <h3 class="font-semibold">Interactive Tutorial</h3>
+                            </div>
+                            <p class="text-gray-600 text-sm">Learn step-by-step how to build causal loop diagrams</p>
+                            <div class="mt-2">
+                                <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded">Tutorial</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Problem Management Section -->
             <section class="mb-8">
                 <div class="bg-white rounded-lg shadow-md p-6">

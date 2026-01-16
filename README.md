@@ -6,10 +6,17 @@ A web-based application for analyzing problems using systems thinking, root caus
 
 - **Problem Management**: Create, edit, and delete problems
 - **Causal Analysis**: Define primary, secondary, and latent causes
-- **Impact Assessment**: Categorize technical, business, and operational impacts
+- **Impact Assessment**: Categorize technical, business, operational, environmental, health, and educational impacts
 - **Feedback Loops**: Identify reinforcing (R) and balancing (B) feedback loops
 - **Remediation Planning**: Map short-term, long-term, and preventive solutions
-- **Visual Diagrams**: Interactive causal loop diagrams
+- **Visual Diagrams**: Interactive causal loop diagrams with enhanced styling
+- **Demo Examples**: Pre-built real-world examples including:
+  - Population Growth Dynamics
+  - Market Supply-Demand Equilibrium
+  - Employee Burnout Cycles
+  - Climate Change Feedback Loops
+  - Social Media Addiction Patterns
+- **Interactive Tutorial**: Step-by-step guidance for learning causal loop modeling
 - **JSON Export/Import**: Structured data exchange
 
 ## Installation
@@ -69,13 +76,34 @@ The application uses a structured JSON format:
 
 ## Usage
 
+### Learning with Examples
+
+1. **Explore Demo Examples**: Click on any example card in the "Demo Examples & Tutorials" section to see pre-built causal loop diagrams
+2. **Interactive Tutorial**: Select the "Interactive Tutorial" example to learn step-by-step how to build causal loop diagrams
+3. **Study Real-World Patterns**: Examine examples like Population Growth, Market Dynamics, Employee Burnout, Climate Change, and Social Media Addiction
+
+### Creating Your Own Analysis
+
 1. **Create a New Problem**: Click "New Problem" and fill in the details
 2. **Add Causes**: Define primary, secondary, and latent causes
-3. **Identify Impacts**: Categorize technical, business, and operational impacts
+3. **Identify Impacts**: Categorize technical, business, operational, environmental, health, and educational impacts
 4. **Map Feedback Loops**: Define reinforcing (R) or balancing (B) loops with cause→effect relationships
 5. **Plan Remediations**: Add short-term, long-term, and preventive solutions
 6. **Visualize**: View the causal loop diagram to understand system dynamics
 7. **Export**: Download the analysis as JSON for documentation or sharing
+
+### Understanding Loop Types
+
+- **Reinforcing Loops (R)**: Amplify change, creating exponential growth or decline (virtuous/vicious cycles)
+- **Balancing Loops (B)**: Stabilize systems, creating equilibrium or goal-seeking behavior
+
+### Tips for Effective Analysis
+
+- Start with simple models and add complexity gradually
+- Look for circular relationships that close back on themselves
+- Identify leverage points where small changes can have big impacts
+- Consider both short-term and long-term consequences
+- Get feedback from others to validate your model
 
 ## API Endpoints
 
