@@ -1,6 +1,14 @@
 let currentProblem = null;
 let problems = [];
 let network = null;
+let simulationRunning = false;
+let simulationData = {};
+let behaviorChart = null;
+let is3DView = false;
+let collaborationActive = false;
+let simulationSpeed = 5;
+let currentTimeStep = 0;
+let maxTimeSteps = 100;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
@@ -1006,4 +1014,561 @@ function createExampleDiagram(example, type) {
     network.once('stabilized', function() {
         network.fit();
     });
+}
+
+// ==================== ADVANCED SIMULATION FEATURES ====================
+
+// Toggle simulation
+function toggleSimulation() {
+    const btn = document.getElementById('simulationBtn');
+    const controls = document.getElementById('simulationControls');
+    const timeline = document.getElementById('timeline');
+    
+    if (simulationRunning) {
+        stopSimulation();
+        btn.innerHTML = '<i class="fas fa-play mr-2"></i>Start Simulation';
+        btn.className = 'bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition';
+        controls.classList.add('hidden');
+        timeline.classList.add('hidden');
+    } else {
+        startSimulation();
+        btn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause Simulation';
+        btn.className = 'bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition';
+        controls.classList.remove('hidden');
+        timeline.classList.remove('hidden');
+        initializeSimulation();
+    }
+}
+
+// Start simulation
+function startSimulation() {
+    if (!currentProblem) {
+        showError('Please load a problem first');
+        return;
+    }
+    
+    simulationRunning = true;
+    initializeBehaviorChart();
+    createVariableControls();
+    simulateStep();
+}
+
+// Stop simulation
+function stopSimulation() {
+    simulationRunning = false;
+    if (simulationInterval) {
+        clearInterval(simulationInterval);
+    }
+}
+
+// Reset simulation
+function resetSimulation() {
+    stopSimulation();
+    currentTimeStep = 0;
+    simulationData = {};
+    updateTimeline();
+    updateCurrentTime();
+    
+    // Reset chart
+    if (behaviorChart) {
+        behaviorChart.data.datasets.forEach(dataset => {
+            dataset.data = [];
+        });
+        behaviorChart.update();
+    }
+    
+    // Reset variable controls
+    document.getElementById('variableControls').innerHTML = '';
+    
+    // Reset metrics
+    document.getElementById('stabilityMetric').textContent = 'Stable';
+    document.getElementById('growthMetric').textContent = '0%';
+    document.getElementById('dominanceMetric').textContent = 'Balanced';
+    
+    showSuccess('Simulation reset');
+}
+
+// Initialize simulation data
+function initializeSimulation() {
+    simulationData = {
+        variables: {},
+        timeSteps: []
+    };
+    
+    // Initialize variables from current problem
+    if (currentProblem) {
+        // Add causes as variables
+        (currentProblem.causes || []).forEach((cause, index) => {
+            simulationData.variables[`cause_${index}`] = {
+                name: cause.description,
+                value: 50,
+                history: [50],
+                type: 'cause'
+            };
+        });
+        
+        // Add impacts as variables
+        (currentProblem.impacts || []).forEach((impact, index) => {
+            simulationData.variables[`impact_${index}`] = {
+                name: impact.description,
+                value: 30,
+                history: [30],
+                type: 'impact'
+            };
+        });
+    }
+}
+
+// Create variable controls for scenario testing
+function createVariableControls() {
+    const container = document.getElementById('variableControls');
+    container.innerHTML = '';
+    
+    Object.keys(simulationData.variables).forEach(key => {
+        const variable = simulationData.variables[key];
+        const controlDiv = document.createElement('div');
+        controlDiv.className = 'bg-white p-3 rounded border';
+        controlDiv.innerHTML = `
+            <label class="block text-sm font-medium text-gray-700 mb-1">${variable.name}</label>
+            <input type="range" min="0" max="100" value="${variable.value}" 
+                   class="w-full" onchange="adjustVariable('${key}', this.value)">
+            <span class="text-xs text-gray-600">Value: <span id="${key}_value">${variable.value.toFixed(1)}</span></span>
+        `;
+        container.appendChild(controlDiv);
+    });
+}
+
+// Adjust variable value
+function adjustVariable(variableId, value) {
+    if (simulationData.variables[variableId]) {
+        simulationData.variables[variableId].value = parseFloat(value);
+        document.getElementById(`${variableId}_value`).textContent = parseFloat(value).toFixed(1);
+        
+        // Add to activity feed if collaboration is active
+        if (collaborationActive) {
+            addActivityFeedEntry(`Adjusted ${simulationData.variables[variableId].name} to ${value}`);
+        }
+    }
+}
+
+// Simulate one step
+function simulateStep() {
+    if (!simulationRunning) return;
+    
+    currentTimeStep++;
+    
+    // Apply feedback loop dynamics
+    applyFeedbackLoops();
+    
+    // Update variable histories
+    Object.keys(simulationData.variables).forEach(key => {
+        const variable = simulationData.variables[key];
+        variable.history.push(variable.value);
+        
+        // Keep only last 50 time steps for performance
+        if (variable.history.length > 50) {
+            variable.history.shift();
+        }
+    });
+    
+    // Update visualizations
+    updateBehaviorChart();
+    updateTimeline();
+    updateCurrentTime();
+    updateSystemMetrics();
+    updateNodeVisualization();
+    
+    // Continue simulation
+    if (currentTimeStep < maxTimeSteps) {
+        simulationInterval = setTimeout(() => simulateStep(), 1000 / simulationSpeed);
+    } else {
+        stopSimulation();
+        showSuccess('Simulation completed');
+    }
+}
+
+// Apply feedback loop dynamics
+function applyFeedbackLoops() {
+    if (!currentProblem || !currentProblem.feedback_loops) return;
+    
+    currentProblem.feedback_loops.forEach(loop => {
+        if (loop.type === 'reinforcing') {
+            // Reinforcing loop: amplify changes
+            Object.keys(simulationData.variables).forEach(key => {
+                const variable = simulationData.variables[key];
+                const growth = 0.05 * (variable.value - 50) / 50; // Growth proportional to deviation
+                variable.value = Math.max(0, Math.min(100, variable.value + growth * simulationSpeed));
+            });
+        } else if (loop.type === 'balancing') {
+            // Balancing loop: move toward equilibrium
+            Object.keys(simulationData.variables).forEach(key => {
+                const variable = simulationData.variables[key];
+                const adjustment = 0.1 * (50 - variable.value) / 50; // Move toward 50
+                variable.value = Math.max(0, Math.min(100, variable.value + adjustment * simulationSpeed));
+            });
+        }
+    });
+}
+
+// Initialize behavior chart
+function initializeBehaviorChart() {
+    const ctx = document.getElementById('behaviorChart').getContext('2d');
+    
+    if (behaviorChart) {
+        behaviorChart.destroy();
+    }
+    
+    const datasets = Object.keys(simulationData.variables).map(key => {
+        const variable = simulationData.variables[key];
+        return {
+            label: variable.name,
+            data: variable.history,
+            borderColor: getColorForVariable(variable.type),
+            backgroundColor: getColorForVariable(variable.type, 0.1),
+            tension: 0.4,
+            fill: false
+        };
+    });
+    
+    behaviorChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: Array.from({length: 50}, (_, i) => `T${i}`),
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// Update behavior chart
+function updateBehaviorChart() {
+    if (!behaviorChart) return;
+    
+    behaviorChart.data.datasets.forEach((dataset, index) => {
+        const variableKey = Object.keys(simulationData.variables)[index];
+        if (simulationData.variables[variableKey]) {
+            dataset.data = [...simulationData.variables[variableKey].history];
+        }
+    });
+    
+    behaviorChart.update('none'); // Update without animation for performance
+}
+
+// Get color for variable
+function getColorForVariable(type, alpha = 1) {
+    const colors = {
+        cause: `rgba(239, 68, 68, ${alpha})`,
+        impact: `rgba(59, 130, 246, ${alpha})`,
+        environmental: `rgba(16, 185, 129, ${alpha})`,
+        health: `rgba(236, 72, 153, ${alpha})`,
+        educational: `rgba(139, 92, 246, ${alpha})`
+    };
+    return colors[type] || `rgba(107, 114, 128, ${alpha})`;
+}
+
+// Update timeline
+function updateTimeline() {
+    const progress = (currentTimeStep / maxTimeSteps) * 100;
+    document.getElementById('timelineProgress').style.width = `${progress}%`;
+    document.getElementById('timelineInfo').textContent = `${currentTimeStep} / ${maxTimeSteps} periods`;
+}
+
+// Update current time display
+function updateCurrentTime() {
+    const period = document.getElementById('timePeriod').value;
+    document.getElementById('currentTime').textContent = `T${currentTimeStep}`;
+}
+
+// Update system metrics
+function updateSystemMetrics() {
+    if (!simulationData.variables) return;
+    
+    const values = Object.values(simulationData.variables).map(v => v.value);
+    const avgValue = values.reduce((a, b) => a + b, 0) / values.length;
+    const variance = values.reduce((a, b) => a + Math.pow(b - avgValue, 2), 0) / values.length;
+    const stdDev = Math.sqrt(variance);
+    
+    // Calculate growth rate
+    let growthRate = 0;
+    if (currentTimeStep > 1) {
+        Object.values(simulationData.variables).forEach(variable => {
+            if (variable.history.length > 1) {
+                const prev = variable.history[variable.history.length - 2];
+                const curr = variable.value;
+                growthRate += ((curr - prev) / prev) * 100;
+            }
+        });
+        growthRate /= Object.keys(simulationData.variables).length;
+    }
+    
+    // Update metrics display
+    document.getElementById('stabilityMetric').textContent = stdDev < 10 ? 'Stable' : stdDev < 20 ? 'Moderate' : 'Volatile';
+    document.getElementById('growthMetric').textContent = `${growthRate.toFixed(1)}%`;
+    
+    // Determine loop dominance
+    const reinforcingCount = (currentProblem.feedback_loops || []).filter(l => l.type === 'reinforcing').length;
+    const balancingCount = (currentProblem.feedback_loops || []).filter(l => l.type === 'balancing').length;
+    const dominance = reinforcingCount > balancingCount ? 'Reinforcing' : balancingCount > reinforcingCount ? 'Balancing' : 'Balanced';
+    document.getElementById('dominanceMetric').textContent = dominance;
+}
+
+// Update node visualization
+function updateNodeVisualization() {
+    if (!network || !simulationData.variables) return;
+    
+    Object.keys(simulationData.variables).forEach(key => {
+        const variable = simulationData.variables[key];
+        const node = network.body.data.nodes.get(key);
+        
+        if (node) {
+            // Update node size based on value
+            const size = 20 + (variable.value / 100) * 30;
+            network.body.data.nodes.update({
+                id: key,
+                size: size,
+                borderWidth: 2 + (variable.value / 100) * 3
+            });
+        }
+    });
+}
+
+// Update simulation speed
+function updateSimulationSpeed(value) {
+    simulationSpeed = parseInt(value);
+    document.getElementById('speedValue').textContent = `${value}x`;
+}
+
+// ==================== 3D VISUALIZATION ====================
+
+// Toggle 3D view
+function toggle3DView() {
+    const btn = document.getElementById('view3DBtn');
+    
+    if (is3DView) {
+        // Switch back to 2D
+        is3DView = false;
+        btn.innerHTML = '<i class="fas fa-cube mr-2"></i>3D View';
+        btn.className = 'bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition';
+        
+        // Recreate 2D diagram
+        if (currentProblem) {
+            createCausalDiagram(currentProblem);
+        }
+    } else {
+        // Switch to 3D
+        is3DView = true;
+        btn.innerHTML = '<i class="fas fa-square mr-2"></i>2D View';
+        btn.className = 'bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition';
+        
+        // Create 3D visualization
+        create3DDiagram();
+    }
+}
+
+// Create 3D diagram
+function create3DDiagram() {
+    const container = document.getElementById('causalDiagram');
+    container.innerHTML = ''; // Clear 2D content
+    
+    // Three.js setup
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf8fafc);
+    
+    const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.set(0, 0, 500);
+    
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+    
+    // Add lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
+    directionalLight.position.set(100, 100, 50);
+    scene.add(directionalLight);
+    
+    // Create 3D nodes
+    const nodes = [];
+    const edges = [];
+    
+    if (currentProblem) {
+        // Add problem node (center)
+        const problemGeometry = new THREE.BoxGeometry(60, 40, 20);
+        const problemMaterial = new THREE.MeshPhongMaterial({ color: 0xef4444 });
+        const problemMesh = new THREE.Mesh(problemGeometry, problemMaterial);
+        problemMesh.position.set(0, 0, 0);
+        scene.add(problemMesh);
+        nodes.push(problemMesh);
+        
+        // Add cause nodes
+        (currentProblem.causes || []).forEach((cause, index) => {
+            const angle = (index * 2 * Math.PI) / (currentProblem.causes.length || 1);
+            const radius = 150;
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+            
+            const geometry = new THREE.SphereGeometry(25, 32, 16);
+            const color = cause.type === 'primary' ? 0xdc2626 : cause.type === 'secondary' ? 0xf59e0b : 0x6b7280;
+            const material = new THREE.MeshPhongMaterial({ color: color });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set(x, y, -50);
+            scene.add(mesh);
+            nodes.push(mesh);
+            
+            // Add edge
+            const edgeGeometry = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(x, y, -50),
+                new THREE.Vector3(0, 0, 0)
+            ]);
+            const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x6b7280 });
+            const edge = new THREE.Line(edgeGeometry, edgeMaterial);
+            scene.add(edge);
+            edges.push(edge);
+        });
+        
+        // Add impact nodes
+        (currentProblem.impacts || []).forEach((impact, index) => {
+            const angle = (index * 2 * Math.PI) / (currentProblem.impacts.length || 1);
+            const radius = 150;
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+            
+            const geometry = new THREE.SphereGeometry(25, 32, 16);
+            const color = impact.type === 'technical' ? 0x2563eb : impact.type === 'business' ? 0x059669 : 0x7c3aed;
+            const material = new THREE.MeshPhongMaterial({ color: color });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set(x, y, 50);
+            scene.add(mesh);
+            nodes.push(mesh);
+            
+            // Add edge
+            const edgeGeometry = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(x, y, 50)
+            ]);
+            const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x6b7280 });
+            const edge = new THREE.Line(edgeGeometry, edgeMaterial);
+            scene.add(edge);
+            edges.push(edge);
+        });
+    }
+    
+    // Animation loop
+    function animate() {
+        requestAnimationFrame(animate);
+        
+        // Rotate nodes slowly
+        nodes.forEach((node, index) => {
+            node.rotation.y += 0.005;
+            node.position.z = Math.sin(Date.now() * 0.001 + index) * 10;
+        });
+        
+        renderer.render(scene, camera);
+    }
+    
+    animate();
+    
+    // Mouse controls
+    let mouseX = 0, mouseY = 0;
+    container.addEventListener('mousemove', (event) => {
+        const rect = container.getBoundingClientRect();
+        mouseX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouseY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        camera.position.x = mouseX * 50;
+        camera.position.y = mouseY * 50;
+        camera.lookAt(0, 0, 0);
+    });
+}
+
+// ==================== COLLABORATION FEATURES ====================
+
+// Toggle collaboration
+function toggleCollaboration() {
+    const btn = document.getElementById('collaborationBtn');
+    const panel = document.getElementById('collaborationPanel');
+    
+    if (collaborationActive) {
+        collaborationActive = false;
+        panel.classList.add('hidden');
+        btn.innerHTML = '<i class="fas fa-users mr-2"></i>Collaborate';
+        btn.className = 'bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition';
+    } else {
+        collaborationActive = true;
+        panel.classList.remove('hidden');
+        btn.innerHTML = '<i class="fas fa-users-slash mr-2"></i>Stop Collaboration';
+        btn.className = 'bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition';
+        
+        // Simulate other users joining
+        setTimeout(() => {
+            addCollaborator('Alice Johnson', 'Viewer');
+            addActivityFeedEntry('Alice Johnson joined the session');
+        }, 2000);
+        
+        setTimeout(() => {
+            addCollaborator('Bob Smith', 'Editor');
+            addActivityFeedEntry('Bob Smith joined the session');
+        }, 4000);
+    }
+}
+
+// Generate share link
+function generateShareLink() {
+    const shareUrl = `${window.location.origin}${window.location.pathname}?session=${generateSessionId()}`;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(shareUrl).then(() => {
+        showSuccess('Share link copied to clipboard!');
+        addActivityFeedEntry('Share link generated');
+    }).catch(() => {
+        showError('Failed to copy share link');
+    });
+}
+
+// Generate session ID
+function generateSessionId() {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
+// Add collaborator
+function addCollaborator(name, role) {
+    const list = document.getElementById('collaboratorsList');
+    const collaboratorDiv = document.createElement('div');
+    collaboratorDiv.className = 'flex items-center gap-2';
+    collaboratorDiv.innerHTML = `
+        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+        <span class="text-sm">${name} (${role})</span>
+    `;
+    list.appendChild(collaboratorDiv);
+}
+
+// Add activity feed entry
+function addActivityFeedEntry(message) {
+    const feed = document.getElementById('activityFeed');
+    const entry = document.createElement('div');
+    const time = new Date().toLocaleTimeString();
+    entry.innerHTML = `<span class="text-gray-500">[${time}]</span> ${message}`;
+    feed.appendChild(entry);
+    feed.scrollTop = feed.scrollHeight;
+    
+    // Keep only last 10 entries
+    while (feed.children.length > 10) {
+        feed.removeChild(feed.firstChild);
+    }
 }

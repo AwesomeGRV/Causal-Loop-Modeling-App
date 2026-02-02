@@ -4,12 +4,29 @@ A web-based application for analyzing problems using systems thinking, root caus
 
 ## Features
 
+### Core Functionality
 - **Problem Management**: Create, edit, and delete problems
 - **Causal Analysis**: Define primary, secondary, and latent causes
 - **Impact Assessment**: Categorize technical, business, operational, environmental, health, and educational impacts
 - **Feedback Loops**: Identify reinforcing (R) and balancing (B) feedback loops
 - **Remediation Planning**: Map short-term, long-term, and preventive solutions
-- **Visual Diagrams**: Interactive causal loop diagrams with enhanced styling
+- **JSON Export/Import**: Structured data exchange
+
+### Advanced Visualization & Interactivity
+- **Animated Loop Simulation**: Watch variables change over time in reinforcing/balancing loops
+- **Scenario Testing**: Adjust variables in real-time and see system behavior changes
+- **3D Visualization**: Toggle between 2D and 3D views for complex diagrams
+- **Real-time Charts**: Live behavior charts showing variable dynamics
+- **System Metrics**: Monitor stability, growth rate, and loop dominance
+- **Interactive Timeline**: Control simulation speed and progress
+
+### Collaboration Features
+- **Real-time Collaboration**: Multiple users working on the same diagram
+- **Share Links**: Generate secure links for team collaboration
+- **Live Activity Feed**: Track changes and participant actions
+- **User Roles**: Owner, Editor, and Viewer permissions
+
+### Learning & Examples
 - **Demo Examples**: Pre-built real-world examples including:
   - Population Growth Dynamics
   - Market Supply-Demand Equilibrium
@@ -17,7 +34,7 @@ A web-based application for analyzing problems using systems thinking, root caus
   - Climate Change Feedback Loops
   - Social Media Addiction Patterns
 - **Interactive Tutorial**: Step-by-step guidance for learning causal loop modeling
-- **JSON Export/Import**: Structured data exchange
+- **Educational Content**: Comprehensive explanations of system dynamics
 
 ## Installation
 
@@ -82,6 +99,21 @@ The application uses a structured JSON format:
 2. **Interactive Tutorial**: Select the "Interactive Tutorial" example to learn step-by-step how to build causal loop diagrams
 3. **Study Real-World Patterns**: Examine examples like Population Growth, Market Dynamics, Employee Burnout, Climate Change, and Social Media Addiction
 
+### Advanced Simulation Features
+
+1. **Start Simulation**: Click "Start Simulation" to begin animated loop dynamics
+2. **Adjust Variables**: Use scenario testing controls to modify variable values in real-time
+3. **Monitor Behavior**: Watch real-time charts showing how variables change over time
+4. **3D Visualization**: Toggle to 3D view for enhanced understanding of complex relationships
+5. **System Metrics**: Track stability, growth rate, and loop dominance indicators
+
+### Real-time Collaboration
+
+1. **Enable Collaboration**: Click "Collaborate" to start a collaborative session
+2. **Share Session**: Generate share links for team members to join
+3. **Live Activity**: Monitor participant actions and changes in the activity feed
+4. **Simultaneous Editing**: Work together on the same causal loop diagram
+
 ### Creating Your Own Analysis
 
 1. **Create a New Problem**: Click "New Problem" and fill in the details
@@ -89,7 +121,7 @@ The application uses a structured JSON format:
 3. **Identify Impacts**: Categorize technical, business, operational, environmental, health, and educational impacts
 4. **Map Feedback Loops**: Define reinforcing (R) or balancing (B) loops with cause→effect relationships
 5. **Plan Remediations**: Add short-term, long-term, and preventive solutions
-6. **Visualize**: View the causal loop diagram to understand system dynamics
+6. **Simulate**: Run animated simulations to understand system dynamics
 7. **Export**: Download the analysis as JSON for documentation or sharing
 
 ### Understanding Loop Types
