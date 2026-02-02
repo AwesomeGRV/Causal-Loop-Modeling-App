@@ -51,6 +51,14 @@ A web-based application for analyzing problems using systems thinking, root caus
 - **Interactive Tutorial**: Step-by-step guidance for learning causal loop modeling
 - **Educational Content**: Comprehensive explanations of system dynamics
 
+### Performance Optimizations
+- **Efficient Simulation Loop**: Configurable speed controls with requestAnimationFrame optimization
+- **Optimized Chart Updates**: Throttled rendering without animation lag for smooth performance
+- **Smart Data Management**: Intelligent history management keeping only relevant data points
+- **Smooth 3D Rendering**: Hardware-accelerated 3D visualization with frame rate limiting
+- **Memory Management**: Automatic cleanup and resource disposal to prevent memory leaks
+- **Performance Monitoring**: Real-time FPS tracking and memory usage optimization
+
 ## Installation
 
 1. Install Python dependencies:

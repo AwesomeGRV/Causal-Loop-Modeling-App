@@ -12,6 +12,20 @@ let maxTimeSteps = 100;
 let aiAnalysisActive = false;
 let customTemplates = [];
 
+// Performance optimization variables
+let simulationInterval = null;
+let frameRequestId = null;
+let lastFrameTime = 0;
+let targetFPS = 60;
+let chartUpdateThrottle = 100; // Update chart every 100ms max
+let lastChartUpdate = 0;
+let performanceMetrics = {
+    frameCount: 0,
+    avgFrameTime: 0,
+    simulationSteps: 0,
+    chartUpdates: 0
+};
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     loadProblems();
@@ -1052,14 +1066,67 @@ function startSimulation() {
     simulationRunning = true;
     initializeBehaviorChart();
     createVariableControls();
-    simulateStep();
+    
+    // Use requestAnimationFrame for smooth performance
+    startOptimizedSimulationLoop();
+}
+
+// Optimized simulation loop using requestAnimationFrame
+function startOptimizedSimulationLoop() {
+    if (!simulationRunning) return;
+    
+    const frameTime = 1000 / targetFPS;
+    const now = performance.now();
+    
+    if (now - lastFrameTime >= frameTime) {
+        const stepStartTime = performance.now();
+        
+        // Execute simulation step
+        simulateStep();
+        
+        // Track performance metrics
+        const stepTime = performance.now() - stepStartTime;
+        updatePerformanceMetrics(stepTime);
+        
+        lastFrameTime = now;
+    }
+    
+    // Continue loop
+    frameRequestId = requestAnimationFrame(startOptimizedSimulationLoop);
+}
+
+// Update performance metrics
+function updatePerformanceMetrics(stepTime) {
+    performanceMetrics.frameCount++;
+    performanceMetrics.simulationSteps++;
+    
+    // Calculate rolling average frame time
+    const alpha = 0.1; // Smoothing factor
+    performanceMetrics.avgFrameTime = 
+        performanceMetrics.avgFrameTime * (1 - alpha) + stepTime * alpha;
+    
+    // Adjust target FPS based on performance
+    if (performanceMetrics.avgFrameTime > 16) { // Slower than 60fps
+        targetFPS = Math.max(30, targetFPS - 1);
+    } else if (performanceMetrics.avgFrameTime < 10) { // Faster than needed
+        targetFPS = Math.min(60, targetFPS + 1);
+    }
 }
 
 // Stop simulation
 function stopSimulation() {
     simulationRunning = false;
+    
+    // Clean up animation frame
+    if (frameRequestId) {
+        cancelAnimationFrame(frameRequestId);
+        frameRequestId = null;
+    }
+    
+    // Clean up interval fallback
     if (simulationInterval) {
         clearInterval(simulationInterval);
+        simulationInterval = null;
     }
 }
 
@@ -1068,6 +1135,14 @@ function resetSimulation() {
     stopSimulation();
     currentTimeStep = 0;
     simulationData = {};
+    lastChartUpdate = 0;
+    performanceMetrics = {
+        frameCount: 0,
+        avgFrameTime: 0,
+        simulationSteps: 0,
+        chartUpdates: 0
+    };
+    
     updateTimeline();
     updateCurrentTime();
     
@@ -1076,7 +1151,7 @@ function resetSimulation() {
         behaviorChart.data.datasets.forEach(dataset => {
             dataset.data = [];
         });
-        behaviorChart.update();
+        behaviorChart.update('none'); // Update without animation
     }
     
     // Reset variable controls
@@ -1090,11 +1165,12 @@ function resetSimulation() {
     showSuccess('Simulation reset');
 }
 
-// Initialize simulation data
+// Initialize simulation data with smart data management
 function initializeSimulation() {
     simulationData = {
         variables: {},
-        timeSteps: []
+        timeSteps: [],
+        maxHistorySize: Math.min(100, maxTimeSteps) // Dynamic history size
     };
     
     // Initialize variables from current problem
@@ -1105,7 +1181,8 @@ function initializeSimulation() {
                 name: cause.description,
                 value: 50,
                 history: [50],
-                type: 'cause'
+                type: 'cause',
+                lastUpdate: Date.now()
             };
         });
         
@@ -1115,9 +1192,77 @@ function initializeSimulation() {
                 name: impact.description,
                 value: 30,
                 history: [30],
-                type: 'impact'
+                type: 'impact',
+                lastUpdate: Date.now()
             };
         });
+    }
+}
+
+// Optimized simulate step with smart data management
+function simulateStep() {
+    if (!simulationRunning) return;
+    
+    currentTimeStep++;
+    
+    // Apply feedback loop dynamics
+    applyFeedbackLoops();
+    
+    // Update variable histories with smart memory management
+    Object.keys(simulationData.variables).forEach(key => {
+        const variable = simulationData.variables[key];
+        variable.history.push(variable.value);
+        variable.lastUpdate = Date.now();
+        
+        // Smart history management - keep only relevant data points
+        const maxHistory = simulationData.maxHistorySize;
+        if (variable.history.length > maxHistory) {
+            // Keep more recent data, sample older data
+            if (variable.history.length > maxHistory * 2) {
+                // Sample every nth point for older data
+                const keepPoints = Math.floor(maxHistory * 0.7);
+                const sampleEvery = Math.floor((variable.history.length - keepPoints) / keepPoints);
+                const sampledHistory = [];
+                
+                // Keep recent points
+                for (let i = variable.history.length - keepPoints; i < variable.history.length; i++) {
+                    sampledHistory.push(variable.history[i]);
+                }
+                
+                variable.history = sampledHistory;
+            } else {
+                // Simple trim for moderately sized history
+                variable.history.shift();
+            }
+        }
+    });
+    
+    // Throttled visual updates for performance
+    const now = Date.now();
+    if (now - lastChartUpdate >= chartUpdateThrottle) {
+        updateBehaviorChart();
+        lastChartUpdate = now;
+        performanceMetrics.chartUpdates++;
+    }
+    
+    // Always update critical UI elements
+    updateTimeline();
+    updateCurrentTime();
+    updateSystemMetrics();
+    updateNodeVisualization();
+    
+    // Continue simulation with optimized timing
+    if (currentTimeStep < maxTimeSteps) {
+        // Use setTimeout for consistent timing regardless of frame rate
+        const stepDelay = Math.max(50, 1000 / simulationSpeed);
+        setTimeout(() => {
+            if (simulationRunning) {
+                simulateStep();
+            }
+        }, stepDelay);
+    } else {
+        stopSimulation();
+        showSuccess('Simulation completed');
     }
 }
 
@@ -1144,48 +1289,13 @@ function createVariableControls() {
 function adjustVariable(variableId, value) {
     if (simulationData.variables[variableId]) {
         simulationData.variables[variableId].value = parseFloat(value);
+        simulationData.variables[variableId].lastUpdate = Date.now();
         document.getElementById(`${variableId}_value`).textContent = parseFloat(value).toFixed(1);
         
         // Add to activity feed if collaboration is active
         if (collaborationActive) {
             addActivityFeedEntry(`Adjusted ${simulationData.variables[variableId].name} to ${value}`);
         }
-    }
-}
-
-// Simulate one step
-function simulateStep() {
-    if (!simulationRunning) return;
-    
-    currentTimeStep++;
-    
-    // Apply feedback loop dynamics
-    applyFeedbackLoops();
-    
-    // Update variable histories
-    Object.keys(simulationData.variables).forEach(key => {
-        const variable = simulationData.variables[key];
-        variable.history.push(variable.value);
-        
-        // Keep only last 50 time steps for performance
-        if (variable.history.length > 50) {
-            variable.history.shift();
-        }
-    });
-    
-    // Update visualizations
-    updateBehaviorChart();
-    updateTimeline();
-    updateCurrentTime();
-    updateSystemMetrics();
-    updateNodeVisualization();
-    
-    // Continue simulation
-    if (currentTimeStep < maxTimeSteps) {
-        simulationInterval = setTimeout(() => simulateStep(), 1000 / simulationSpeed);
-    } else {
-        stopSimulation();
-        showSuccess('Simulation completed');
     }
 }
 
@@ -1212,7 +1322,7 @@ function applyFeedbackLoops() {
     });
 }
 
-// Initialize behavior chart
+// Initialize behavior chart with performance optimizations
 function initializeBehaviorChart() {
     const ctx = document.getElementById('behaviorChart').getContext('2d');
     
@@ -1224,51 +1334,87 @@ function initializeBehaviorChart() {
         const variable = simulationData.variables[key];
         return {
             label: variable.name,
-            data: variable.history,
+            data: [...variable.history], // Copy array to avoid reference issues
             borderColor: getColorForVariable(variable.type),
             backgroundColor: getColorForVariable(variable.type, 0.1),
             tension: 0.4,
-            fill: false
+            fill: false,
+            borderWidth: 2,
+            pointRadius: 0, // Hide points for better performance
+            pointHoverRadius: 4
         };
     });
     
     behaviorChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: Array.from({length: 50}, (_, i) => `T${i}`),
+            labels: Array.from({length: simulationData.maxHistorySize || 100}, (_, i) => `T${i}`),
             datasets: datasets
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: {
+                duration: 0 // Disable animations for better performance
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
             scales: {
                 y: {
                     beginAtZero: true,
                     max: 100
+                },
+                x: {
+                    display: true
                 }
             },
             plugins: {
                 legend: {
                     display: true,
-                    position: 'bottom'
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 10
+                    }
+                },
+                tooltip: {
+                    enabled: true,
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            elements: {
+                line: {
+                    tension: 0.4
                 }
             }
         }
     });
 }
 
-// Update behavior chart
+// Optimized behavior chart update
 function updateBehaviorChart() {
-    if (!behaviorChart) return;
+    if (!behaviorChart || !simulationData.variables) return;
     
+    // Batch update all datasets at once
+    const updateData = {};
+    Object.keys(simulationData.variables).forEach(key => {
+        const variable = simulationData.variables[key];
+        updateData[key] = [...variable.history]; // Create copy to avoid reference issues
+    });
+    
+    // Update datasets efficiently
     behaviorChart.data.datasets.forEach((dataset, index) => {
         const variableKey = Object.keys(simulationData.variables)[index];
-        if (simulationData.variables[variableKey]) {
-            dataset.data = [...simulationData.variables[variableKey].history];
+        if (updateData[variableKey]) {
+            dataset.data = updateData[variableKey];
         }
     });
     
-    behaviorChart.update('none'); // Update without animation for performance
+    // Update chart without animation for performance
+    behaviorChart.update('none');
 }
 
 // Get color for variable
@@ -1349,11 +1495,36 @@ function updateNodeVisualization() {
     });
 }
 
-// Update simulation speed
+// Update simulation speed with performance monitoring
 function updateSimulationSpeed(value) {
     simulationSpeed = parseInt(value);
     document.getElementById('speedValue').textContent = `${value}x`;
+    
+    // Log performance impact
+    if (performanceMetrics.avgFrameTime > 20) {
+        console.warn('High frame time detected:', performanceMetrics.avgFrameTime);
+    }
 }
+
+// Performance monitoring function
+function getPerformanceMetrics() {
+    return {
+        ...performanceMetrics,
+        currentFPS: performanceMetrics.avgFrameTime > 0 ? Math.round(1000 / performanceMetrics.avgFrameTime) : 0,
+        memoryUsage: performance.memory ? {
+            used: Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) + ' MB',
+            total: Math.round(performance.memory.totalJSHeapSize / 1024 / 1024) + ' MB'
+        } : 'N/A'
+    };
+}
+
+// Log performance metrics periodically
+setInterval(() => {
+    if (simulationRunning) {
+        const metrics = getPerformanceMetrics();
+        console.log('Performance Metrics:', metrics);
+    }
+}, 5000);
 
 // ==================== 3D VISUALIZATION ====================
 
@@ -1382,41 +1553,53 @@ function toggle3DView() {
     }
 }
 
-// Create 3D diagram
+// Create 3D diagram with performance optimizations
 function create3DDiagram() {
     const container = document.getElementById('causalDiagram');
     container.innerHTML = ''; // Clear 2D content
     
-    // Three.js setup
+    // Three.js setup with performance optimizations
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf8fafc);
     
     const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
     camera.position.set(0, 0, 500);
     
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ 
+        antialias: true,
+        alpha: true,
+        powerPreference: 'high-performance'
+    });
     renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
     container.appendChild(renderer.domElement);
     
-    // Add lights
+    // Optimized lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
     directionalLight.position.set(100, 100, 50);
     scene.add(directionalLight);
     
-    // Create 3D nodes
+    // Create 3D nodes with optimizations
     const nodes = [];
     const edges = [];
+    const nodeData = [];
     
     if (currentProblem) {
         // Add problem node (center)
         const problemGeometry = new THREE.BoxGeometry(60, 40, 20);
-        const problemMaterial = new THREE.MeshPhongMaterial({ color: 0xef4444 });
+        const problemMaterial = new THREE.MeshPhongMaterial({ 
+            color: 0xef4444,
+            flatShading: true // Better performance
+        });
         const problemMesh = new THREE.Mesh(problemGeometry, problemMaterial);
         problemMesh.position.set(0, 0, 0);
+        problemMesh.castShadow = true;
+        problemMesh.receiveShadow = true;
         scene.add(problemMesh);
         nodes.push(problemMesh);
+        nodeData.push({ mesh: problemMesh, baseY: 0, phase: 0 });
         
         // Add cause nodes
         (currentProblem.causes || []).forEach((cause, index) => {
@@ -1425,13 +1608,19 @@ function create3DDiagram() {
             const x = Math.cos(angle) * radius;
             const y = Math.sin(angle) * radius;
             
-            const geometry = new THREE.SphereGeometry(25, 32, 16);
+            const geometry = new THREE.SphereGeometry(25, 16, 12); // Reduced segments for performance
             const color = cause.type === 'primary' ? 0xdc2626 : cause.type === 'secondary' ? 0xf59e0b : 0x6b7280;
-            const material = new THREE.MeshPhongMaterial({ color: color });
+            const material = new THREE.MeshPhongMaterial({ 
+                color: color,
+                flatShading: true
+            });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.position.set(x, y, -50);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
             scene.add(mesh);
             nodes.push(mesh);
+            nodeData.push({ mesh: mesh, baseY: y, baseZ: -50, phase: index * 0.5 });
             
             // Add edge
             const edgeGeometry = new THREE.BufferGeometry().setFromPoints([
@@ -1451,13 +1640,19 @@ function create3DDiagram() {
             const x = Math.cos(angle) * radius;
             const y = Math.sin(angle) * radius;
             
-            const geometry = new THREE.SphereGeometry(25, 32, 16);
+            const geometry = new THREE.SphereGeometry(25, 16, 12); // Reduced segments
             const color = impact.type === 'technical' ? 0x2563eb : impact.type === 'business' ? 0x059669 : 0x7c3aed;
-            const material = new THREE.MeshPhongMaterial({ color: color });
+            const material = new THREE.MeshPhongMaterial({ 
+                color: color,
+                flatShading: true
+            });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.position.set(x, y, 50);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
             scene.add(mesh);
             nodes.push(mesh);
+            nodeData.push({ mesh: mesh, baseY: y, baseZ: 50, phase: index * 0.5 + Math.PI });
             
             // Add edge
             const edgeGeometry = new THREE.BufferGeometry().setFromPoints([
@@ -1471,24 +1666,46 @@ function create3DDiagram() {
         });
     }
     
-    // Animation loop
-    function animate() {
-        requestAnimationFrame(animate);
+    // Performance-optimized animation loop
+    let animationId;
+    let lastTime = 0;
+    const targetFPS = 30; // Reduced FPS for better performance
+    
+    function animate(currentTime) {
+        animationId = requestAnimationFrame(animate);
         
-        // Rotate nodes slowly
-        nodes.forEach((node, index) => {
-            node.rotation.y += 0.005;
-            node.position.z = Math.sin(Date.now() * 0.001 + index) * 10;
+        // Frame rate limiting
+        if (currentTime - lastTime < 1000 / targetFPS) {
+            return;
+        }
+        lastTime = currentTime;
+        
+        // Optimized node animations
+        const time = currentTime * 0.001;
+        nodeData.forEach((nodeData, index) => {
+            const mesh = nodeData.mesh;
+            
+            // Rotation
+            mesh.rotation.y += 0.005;
+            
+            // Floating animation with reduced calculations
+            const floatOffset = Math.sin(time + nodeData.phase) * 5;
+            mesh.position.z = nodeData.baseZ + floatOffset;
         });
         
         renderer.render(scene, camera);
     }
     
-    animate();
+    animate(0);
     
-    // Mouse controls
+    // Optimized mouse controls with throttling
     let mouseX = 0, mouseY = 0;
+    let lastMouseMove = 0;
+    
     container.addEventListener('mousemove', (event) => {
+        const now = Date.now();
+        if (now - lastMouseMove < 16) return; // Throttle to ~60fps
+        
         const rect = container.getBoundingClientRect();
         mouseX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         mouseY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -1496,7 +1713,25 @@ function create3DDiagram() {
         camera.position.x = mouseX * 50;
         camera.position.y = mouseY * 50;
         camera.lookAt(0, 0, 0);
+        
+        lastMouseMove = now;
     });
+    
+    // Clean up function
+    container.cleanup = () => {
+        if (animationId) {
+            cancelAnimationFrame(animationId);
+        }
+        renderer.dispose();
+        nodes.forEach(node => {
+            node.geometry.dispose();
+            node.material.dispose();
+        });
+        edges.forEach(edge => {
+            edge.geometry.dispose();
+            edge.material.dispose();
+        });
+    };
 }
 
 // ==================== COLLABORATION FEATURES ====================
