@@ -78,6 +78,288 @@
         </header>
 
         <main>
+            <!-- Template Library Section -->
+            <section id="templateSection" class="mb-8">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-folder-open mr-2 text-purple-600"></i>Template Library
+                    </h2>
+                    <p class="text-gray-600 mb-6">Jump-start your analysis with industry-specific templates, common problem patterns, and system archetypes.</p>
+                    
+                    <!-- Template Navigation Tabs -->
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <button onclick="showTemplateCategory('industry')" class="template-tab bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                            <i class="fas fa-industry mr-2"></i>Industry Templates
+                        </button>
+                        <button onclick="showTemplateCategory('problem')" class="template-tab bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>Problem Types
+                        </button>
+                        <button onclick="showTemplateCategory('archetype')" class="template-tab bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                            <i class="fas fa-project-diagram mr-2"></i>System Archetypes
+                        </button>
+                        <button onclick="showTemplateCategory('custom')" class="template-tab bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
+                            <i class="fas fa-save mr-2"></i>Custom Templates
+                        </button>
+                    </div>
+                    
+                    <!-- Industry Templates -->
+                    <div id="industryTemplates" class="template-category">
+                        <h3 class="text-lg font-semibold mb-4">Industry-Specific Templates</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="template-card bg-gradient-to-br from-red-50 to-pink-50 p-4 rounded-lg border border-red-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('healthcare-patient-flow')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-heartbeat text-red-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">Healthcare Patient Flow</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Analyze patient journey, bottlenecks, and care delivery optimization</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Healthcare</span>
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">Operations</span>
+                                </div>
+                            </div>
+                            
+                            <div class="template-card bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('it-software-development')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-code text-blue-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">IT Software Development</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Manage technical debt, delivery velocity, and quality assurance</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">Technology</span>
+                                    <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">Development</span>
+                                </div>
+                            </div>
+                            
+                            <div class="template-card bg-gradient-to-br from-yellow-50 to-orange-50 p-4 rounded-lg border border-yellow-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('manufacturing-supply-chain')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-industry text-yellow-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">Manufacturing Supply Chain</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Optimize inventory, production, and distribution networks</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded">Manufacturing</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Logistics</span>
+                                </div>
+                            </div>
+                            
+                            <div class="template-card bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('education-student-success')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-graduation-cap text-green-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">Education Student Success</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Improve learning outcomes, retention, and educational quality</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Education</span>
+                                    <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">Student</span>
+                                </div>
+                            </div>
+                            
+                            <div class="template-card bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('retail-customer-experience')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-shopping-cart text-purple-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">Retail Customer Experience</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Enhance satisfaction, loyalty, and service quality</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">Retail</span>
+                                    <span class="px-2 py-1 bg-pink-100 text-pink-700 text-xs rounded">Customer</span>
+                                </div>
+                            </div>
+                            
+                            <div class="template-card bg-gradient-to-br from-teal-50 to-cyan-50 p-4 rounded-lg border border-teal-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('finance-risk-management')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-chart-line text-teal-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">Finance Risk Management</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Identify and mitigate financial risks and compliance issues</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-teal-100 text-teal-700 text-xs rounded">Finance</span>
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Risk</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Problem Type Templates -->
+                    <div id="problemTemplates" class="template-category hidden">
+                        <h3 class="text-lg font-semibold mb-4">Common Problem Type Templates</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="template-card bg-gradient-to-br from-red-50 to-orange-50 p-4 rounded-lg border border-red-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('project-delays')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-clock text-red-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">Project Delays</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Analyze schedule slips, dependencies, and timeline management</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Schedule</span>
+                                    <span class="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded">Delays</span>
+                                </div>
+                            </div>
+                            
+                            <div class="template-card bg-gradient-to-br from-yellow-50 to-amber-50 p-4 rounded-lg border border-yellow-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('budget-overruns')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-dollar-sign text-yellow-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">Budget Overruns</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Track cost escalations, resource allocation, and financial controls</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded">Budget</span>
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Cost</span>
+                                </div>
+                            </div>
+                            
+                            <div class="template-card bg-gradient-to-br from-purple-50 to-indigo-50 p-4 rounded-lg border border-purple-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('quality-issues')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-bug text-purple-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">Quality Issues</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Identify defect sources, testing gaps, and quality improvements</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">Quality</span>
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Defects</span>
+                                </div>
+                            </div>
+                            
+                            <div class="template-card bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-lg border border-blue-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('team-burnout')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-fire text-blue-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">Team Burnout</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Address workload, stress factors, and team sustainability</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">Wellness</span>
+                                    <span class="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded">Burnout</span>
+                                </div>
+                            </div>
+                            
+                            <div class="template-card bg-gradient-to-br from-green-50 to-teal-50 p-4 rounded-lg border border-green-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('communication-breakdown')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-comments text-green-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">Communication Breakdown</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Resolve information gaps, coordination issues, and alignment</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Communication</span>
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Breakdown</span>
+                                </div>
+                            </div>
+                            
+                            <div class="template-card bg-gradient-to-br from-pink-50 to-rose-50 p-4 rounded-lg border border-pink-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('customer-complaints')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-comment-dots text-pink-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">Customer Complaints</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Analyze service failures, satisfaction drivers, and resolution</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-pink-100 text-pink-700 text-xs rounded">Customer</span>
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Service</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- System Archetype Templates -->
+                    <div id="archetypeTemplates" class="template-category hidden">
+                        <h3 class="text-lg font-semibold mb-4">System Archetype Library</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="template-card bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('limits-to-growth')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-chart-line text-green-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">Limits to Growth</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Growth process encounters limiting factors that slow it down</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Growth</span>
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Limits</span>
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">Balancing</span>
+                                </div>
+                            </div>
+                            
+                            <div class="template-card bg-gradient-to-br from-red-50 to-pink-50 p-4 rounded-lg border border-red-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('tragedy-of-commons')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-users text-red-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">Tragedy of the Commons</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Individual rational actions lead to collective resource depletion</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Resources</span>
+                                    <span class="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded">Depletion</span>
+                                    <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">Reinforcing</span>
+                                </div>
+                            </div>
+                            
+                            <div class="template-card bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('success-to-successful')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-trophy text-blue-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">Success to the Successful</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Resources allocated to those already successful, increasing inequality</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">Inequality</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Advantage</span>
+                                    <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">Reinforcing</span>
+                                </div>
+                            </div>
+                            
+                            <div class="template-card bg-gradient-to-br from-yellow-50 to-orange-50 p-4 rounded-lg border border-yellow-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('escalation')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-rocket text-yellow-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">Escalation</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Competitive actions lead to increasing intensity and arms races</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded">Competition</span>
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Conflict</span>
+                                    <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">Reinforcing</span>
+                                </div>
+                            </div>
+                            
+                            <div class="template-card bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('fixes-that-fail')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-tools text-purple-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">Fixes that Fail</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Solutions make the problem worse over time through unintended consequences</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">Solutions</span>
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Consequences</span>
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">Delays</span>
+                                </div>
+                            </div>
+                            
+                            <div class="template-card bg-gradient-to-br from-teal-50 to-cyan-50 p-4 rounded-lg border border-teal-200 hover:shadow-lg transition cursor-pointer" onclick="loadTemplate('growth-and-underinvestment')">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-seedling text-teal-600 text-2xl mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800">Growth and Underinvestment</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Growth outpaces capacity investment, leading to performance decline</p>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-2 py-1 bg-teal-100 text-teal-700 text-xs rounded">Growth</span>
+                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded">Investment</span>
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">Delays</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Custom Templates -->
+                    <div id="customTemplates" class="template-category hidden">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold">Your Custom Templates</h3>
+                            <button onclick="saveAsTemplate()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                                <i class="fas fa-save mr-2"></i>Save Current as Template
+                            </button>
+                        </div>
+                        <div id="customTemplatesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="text-center text-gray-500 py-8 col-span-full">
+                                <i class="fas fa-folder-open text-4xl mb-3"></i>
+                                <p>No custom templates yet. Create and save your own templates for reuse!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Examples Section -->
             <section class="mb-8">
                 <div class="bg-white rounded-lg shadow-md p-6">

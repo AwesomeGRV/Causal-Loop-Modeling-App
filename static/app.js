@@ -10,6 +10,7 @@ let simulationSpeed = 5;
 let currentTimeStep = 0;
 let maxTimeSteps = 100;
 let aiAnalysisActive = false;
+let customTemplates = [];
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
@@ -2052,3 +2053,478 @@ function updateAIConfidence(confidence) {
         bar.className = 'bg-red-600 h-2 rounded-full transition-all duration-500';
     }
 }
+
+// ==================== TEMPLATE LIBRARY ====================
+
+// Template data structure
+const templates = {
+    // Industry-specific templates
+    'healthcare-patient-flow': {
+        title: 'Healthcare Patient Flow',
+        description: 'Analysis of patient journey through healthcare system',
+        causes: [
+            { description: 'Patient volume increase', type: 'primary' },
+            { description: 'Limited staff availability', type: 'primary' },
+            { description: 'Complex insurance processes', type: 'secondary' },
+            { description: 'Aging population', type: 'latent' },
+            { description: 'Facility capacity constraints', type: 'secondary' }
+        ],
+        impacts: [
+            { description: 'Longer wait times', type: 'operational' },
+            { description: 'Decreased patient satisfaction', type: 'health' },
+            { description: 'Staff burnout', type: 'operational' },
+            { description: 'Increased healthcare costs', type: 'business' },
+            { description: 'Reduced quality of care', type: 'health' }
+        ],
+        feedback_loops: [
+            {
+                description: 'Staff Burnout Cycle',
+                type: 'reinforcing',
+                relationships: ['High patient volume → Staff burnout → Reduced staff capacity → Longer wait times']
+            },
+            {
+                description: 'Quality Control Loop',
+                type: 'balancing',
+                relationships: ['Decreased quality → Increased oversight → Improved processes → Better outcomes']
+            }
+        ],
+        remediations: [
+            { description: 'Implement triage systems', type: 'short-term' },
+            { description: 'Hire additional staff', type: 'long-term' },
+            { description: 'Process automation', type: 'preventive' }
+        ]
+    },
+    
+    'it-software-development': {
+        title: 'IT Software Development',
+        description: 'Managing technical debt and delivery velocity',
+        causes: [
+            { description: 'Rapid feature requirements', type: 'primary' },
+            { description: 'Technical debt accumulation', type: 'primary' },
+            { description: 'Limited testing resources', type: 'secondary' },
+            { description: 'Skill gaps in team', type: 'latent' },
+            { description: 'Pressure to deliver quickly', type: 'secondary' }
+        ],
+        impacts: [
+            { description: 'Decreased code quality', type: 'technical' },
+            { description: 'Slower development velocity', type: 'operational' },
+            { description: 'Increased bug count', type: 'technical' },
+            { description: 'Team frustration', type: 'operational' },
+            { description: 'Customer satisfaction decline', type: 'business' }
+        ],
+        feedback_loops: [
+            {
+                description: 'Technical Debt Spiral',
+                type: 'reinforcing',
+                relationships: ['Technical debt → Slower development → More shortcuts → More technical debt']
+            },
+            {
+                description: 'Quality Feedback Loop',
+                type: 'balancing',
+                relationships: ['Low quality → Increased testing → Better code → Improved quality']
+            }
+        ],
+        remediations: [
+            { description: 'Allocate time for refactoring', type: 'short-term' },
+            { description: 'Implement comprehensive testing', type: 'long-term' },
+            { description: 'Adopt clean code practices', type: 'preventive' }
+        ]
+    },
+    
+    'manufacturing-supply-chain': {
+        title: 'Manufacturing Supply Chain',
+        description: 'Optimizing production and distribution networks',
+        causes: [
+            { description: 'Demand volatility', type: 'primary' },
+            { description: 'Supplier reliability issues', type: 'primary' },
+            { description: 'Inventory management challenges', type: 'secondary' },
+            { description: 'Transportation disruptions', type: 'latent' },
+            { description: 'Quality control problems', type: 'secondary' }
+        ],
+        impacts: [
+            { description: 'Stockouts', type: 'operational' },
+            { description: 'Excess inventory costs', type: 'business' },
+            { description: 'Production delays', type: 'operational' },
+            { description: 'Customer dissatisfaction', type: 'business' },
+            { description: 'Increased operational costs', type: 'business' }
+        ],
+        feedback_loops: [
+            {
+                description: 'Bullwhip Effect',
+                type: 'reinforcing',
+                relationships: ['Demand variability → Order fluctuations → Inventory swings → More variability']
+            },
+            {
+                description: 'Inventory Balancing',
+                type: 'balancing',
+                relationships: ['High inventory → Cost pressure → Reduction efforts → Optimal levels']
+            }
+        ],
+        remediations: [
+            { description: 'Implement demand forecasting', type: 'short-term' },
+            { description: 'Diversify supplier base', type: 'long-term' },
+            { description: 'Adopt just-in-time inventory', type: 'preventive' }
+        ]
+    },
+    
+    'education-student-success': {
+        title: 'Education Student Success',
+        description: 'Improving learning outcomes and retention',
+        causes: [
+            { description: 'Large class sizes', type: 'primary' },
+            { description: 'Limited resources', type: 'primary' },
+            { description: 'Teacher workload', type: 'secondary' },
+            { description: 'Socioeconomic factors', type: 'latent' },
+            { description: 'Outdated teaching methods', type: 'secondary' }
+        ],
+        impacts: [
+            { description: 'Lower academic performance', type: 'educational' },
+            { description: 'Decreased student engagement', type: 'educational' },
+            { description: 'Higher dropout rates', type: 'educational' },
+            { description: 'Teacher burnout', type: 'operational' },
+            { description: 'Reduced institutional reputation', type: 'business' }
+        ],
+        feedback_loops: [
+            {
+                description: 'Success Breeds Success',
+                type: 'reinforcing',
+                relationships: ['Student success → Increased confidence → Better performance → More success']
+            },
+            {
+                description: 'Resource Allocation',
+                type: 'balancing',
+                relationships: ['Poor performance → Additional resources → Improved support → Better outcomes']
+            }
+        ],
+        remediations: [
+            { description: 'Reduce class sizes', type: 'short-term' },
+            { description: 'Invest in teacher training', type: 'long-term' },
+            { description: 'Update curriculum and methods', type: 'preventive' }
+        ]
+    },
+    
+    // Problem-type templates
+    'project-delays': {
+        title: 'Project Delays',
+        description: 'Analyzing and preventing schedule slips',
+        causes: [
+            { description: 'Unrealistic timelines', type: 'primary' },
+            { description: 'Scope creep', type: 'primary' },
+            { description: 'Resource constraints', type: 'secondary' },
+            { description: 'Poor planning', type: 'latent' },
+            { description: 'External dependencies', type: 'secondary' }
+        ],
+        impacts: [
+            { description: 'Budget overruns', type: 'business' },
+            { description: 'Team burnout', type: 'operational' },
+            { description: 'Stakeholder dissatisfaction', type: 'business' },
+            { description: 'Quality compromises', type: 'technical' },
+            { description: 'Reputational damage', type: 'business' }
+        ],
+        feedback_loops: [
+            {
+                description: 'Death March',
+                type: 'reinforcing',
+                relationships: ['Delays → Pressure → Cutting corners → More problems → More delays']
+            }
+        ],
+        remediations: [
+            { description: 'Rebaseline project schedule', type: 'short-term' },
+            { description: 'Implement agile methodology', type: 'long-term' },
+            { description: 'Better risk assessment', type: 'preventive' }
+        ]
+    },
+    
+    'budget-overruns': {
+        title: 'Budget Overruns',
+        description: 'Managing cost escalations and financial controls',
+        causes: [
+            { description: 'Poor cost estimation', type: 'primary' },
+            { description: 'Scope changes', type: 'primary' },
+            { description: 'Inefficient resource use', type: 'secondary' },
+            { description: 'Market inflation', type: 'latent' },
+            { description: 'Inadequate monitoring', type: 'secondary' }
+        ],
+        impacts: [
+            { description: 'Reduced profitability', type: 'business' },
+            { description: 'Cash flow problems', type: 'business' },
+            { description: 'Stakeholder concerns', type: 'business' },
+            { description: 'Project cancellation risk', type: 'business' },
+            { description: 'Team morale decline', type: 'operational' }
+        ],
+        feedback_loops: [
+            {
+                description: 'Cost Escalation',
+                type: 'reinforcing',
+                relationships: ['Budget pressure → Rushed decisions → Poor quality → Rework → Higher costs']
+            }
+        ],
+        remediations: [
+            { description: 'Implement cost controls', type: 'short-term' },
+            { description: 'Regular budget reviews', type: 'long-term' },
+            { description: 'Contingency planning', type: 'preventive' }
+        ]
+    },
+    
+    // System archetype templates
+    'limits-to-growth': {
+        title: 'Limits to Growth',
+        description: 'Growth process encounters limiting factors',
+        causes: [
+            { description: 'Growth actions', type: 'primary' },
+            { description: 'Increasing performance', type: 'primary' },
+            { description: 'Resource consumption', type: 'secondary' },
+            { description: 'Waste generation', type: 'secondary' },
+            { description: 'System constraints', type: 'latent' }
+        ],
+        impacts: [
+            { description: 'Improved performance', type: 'business' },
+            { description: 'Resource depletion', type: 'operational' },
+            { description: 'Slowing growth', type: 'business' },
+            { description: 'System stress', type: 'operational' },
+            { description: 'Diminishing returns', type: 'business' }
+        ],
+        feedback_loops: [
+            {
+                description: 'Growth Loop',
+                type: 'reinforcing',
+                relationships: ['Growth actions → Better performance → More growth actions']
+            },
+            {
+                description: 'Limits Loop',
+                type: 'balancing',
+                relationships: ['Growth → Resource use → Constraints → Slower growth']
+            }
+        ],
+        remediations: [
+            { description: 'Remove constraints', type: 'short-term' },
+            { description: 'Find new resources', type: 'long-term' },
+            { description: 'Sustainable practices', type: 'preventive' }
+        ]
+    },
+    
+    'tragedy-of-commons': {
+        title: 'Tragedy of the Commons',
+        description: 'Individual rational actions leading to collective disaster',
+        causes: [
+            { description: 'Individual resource use', type: 'primary' },
+            { description: 'Personal benefit focus', type: 'primary' },
+            { description: 'Shared resource access', type: 'secondary' },
+            { description: 'Lack of regulation', type: 'latent' },
+            { description: 'Short-term thinking', type: 'secondary' }
+        ],
+        impacts: [
+            { description: 'Resource depletion', type: 'environmental' },
+            { description: 'System collapse', type: 'environmental' },
+            { description: 'Individual suffering', type: 'health' },
+            { description: 'Economic loss', type: 'business' },
+            { description: 'Social conflict', type: 'operational' }
+        ],
+        feedback_loops: [
+            {
+                description: 'Depletion Spiral',
+                type: 'reinforcing',
+                relationships: ['Resource use → Depletion → Competition → More intensive use']
+            }
+        ],
+        remediations: [
+            { description: 'Implement regulations', type: 'short-term' },
+            { description: 'Create resource management', type: 'long-term' },
+            { description: 'Education and awareness', type: 'preventive' }
+        ]
+    }
+};
+
+// Show template category
+function showTemplateCategory(category) {
+    // Hide all categories
+    document.querySelectorAll('.template-category').forEach(cat => {
+        cat.classList.add('hidden');
+    });
+    
+    // Show selected category
+    document.getElementById(`${category}Templates`).classList.remove('hidden');
+    
+    // Update tab styling
+    document.querySelectorAll('.template-tab').forEach(tab => {
+        tab.className = tab.className.replace(/bg-\w+-600/, 'bg-gray-400');
+    });
+    event.target.className = event.target.className.replace('bg-gray-400', 
+        category === 'industry' ? 'bg-purple-600' :
+        category === 'problem' ? 'bg-blue-600' :
+        category === 'archetype' ? 'bg-green-600' : 'bg-gray-600'
+    );
+}
+
+// Load template
+function loadTemplate(templateId) {
+    const template = templates[templateId];
+    if (!template) {
+        showError('Template not found');
+        return;
+    }
+    
+    // Create problem from template
+    currentProblem = {
+        id: `template_${templateId}_${Date.now()}`,
+        title: template.title,
+        description: template.description,
+        causes: [...template.causes],
+        impacts: [...template.impacts],
+        feedback_loops: [...template.feedback_loops],
+        remediations: [...template.remediations]
+    };
+    
+    // Show sections and display data
+    document.getElementById('detailsSection').classList.remove('hidden');
+    document.getElementById('diagramSection').classList.remove('hidden');
+    document.getElementById('problemTitle').textContent = currentProblem.title;
+    
+    displayCauses(currentProblem.causes);
+    displayImpacts(currentProblem.impacts);
+    displayLoops(currentProblem.feedback_loops);
+    displayRemediations(currentProblem.remediations);
+    createCausalDiagram(currentProblem);
+    
+    showSuccess(`Template "${template.title}" loaded successfully!`);
+    
+    // Scroll to details
+    document.getElementById('detailsSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Save current problem as template
+function saveAsTemplate() {
+    if (!currentProblem) {
+        showError('No problem to save as template');
+        return;
+    }
+    
+    const templateName = prompt('Enter a name for your custom template:');
+    if (!templateName) return;
+    
+    const template = {
+        name: templateName,
+        title: currentProblem.title,
+        description: currentProblem.description,
+        causes: [...(currentProblem.causes || [])],
+        impacts: [...(currentProblem.impacts || [])],
+        feedback_loops: [...(currentProblem.feedback_loops || [])],
+        remediations: [...(currentProblem.remediations || [])],
+        created: new Date().toISOString()
+    };
+    
+    // Save to local storage
+    customTemplates.push(template);
+    localStorage.setItem('customTemplates', JSON.stringify(customTemplates));
+    
+    // Refresh custom templates display
+    displayCustomTemplates();
+    
+    showSuccess(`Template "${templateName}" saved successfully!`);
+}
+
+// Display custom templates
+function displayCustomTemplates() {
+    const container = document.getElementById('customTemplatesList');
+    
+    if (customTemplates.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-gray-500 py-8 col-span-full">
+                <i class="fas fa-folder-open text-4xl mb-3"></i>
+                <p>No custom templates yet. Create and save your own templates for reuse!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = '';
+    
+    customTemplates.forEach((template, index) => {
+        const templateCard = document.createElement('div');
+        templateCard.className = 'template-card bg-gradient-to-br from-gray-50 to-slate-50 p-4 rounded-lg border border-gray-200 hover:shadow-lg transition cursor-pointer';
+        templateCard.innerHTML = `
+            <div class="flex justify-between items-start mb-2">
+                <div class="flex items-center">
+                    <i class="fas fa-file-alt text-gray-600 text-xl mr-3"></i>
+                    <h4 class="font-semibold text-gray-800">${template.name}</h4>
+                </div>
+                <button onclick="deleteCustomTemplate(${index})" class="text-red-500 hover:text-red-700">
+                    <i class="fas fa-trash text-sm"></i>
+                </button>
+            </div>
+            <p class="text-sm text-gray-600 mb-3">${template.title}</p>
+            <div class="text-xs text-gray-500">
+                Created: ${new Date(template.created).toLocaleDateString()}
+            </div>
+        `;
+        
+        templateCard.onclick = (e) => {
+            if (!e.target.closest('button')) {
+                loadCustomTemplate(index);
+            }
+        };
+        
+        container.appendChild(templateCard);
+    });
+}
+
+// Load custom template
+function loadCustomTemplate(index) {
+    const template = customTemplates[index];
+    if (!template) return;
+    
+    currentProblem = {
+        id: `custom_${index}_${Date.now()}`,
+        title: template.title,
+        description: template.description,
+        causes: [...template.causes],
+        impacts: [...template.impacts],
+        feedback_loops: [...template.feedback_loops],
+        remediations: [...template.remediations]
+    };
+    
+    // Show sections and display data
+    document.getElementById('detailsSection').classList.remove('hidden');
+    document.getElementById('diagramSection').classList.remove('hidden');
+    document.getElementById('problemTitle').textContent = currentProblem.title;
+    
+    displayCauses(currentProblem.causes);
+    displayImpacts(currentProblem.impacts);
+    displayLoops(currentProblem.feedback_loops);
+    displayRemediations(currentProblem.remediations);
+    createCausalDiagram(currentProblem);
+    
+    showSuccess(`Custom template "${template.name}" loaded successfully!`);
+    
+    // Scroll to details
+    document.getElementById('detailsSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Delete custom template
+function deleteCustomTemplate(index) {
+    if (confirm('Are you sure you want to delete this template?')) {
+        customTemplates.splice(index, 1);
+        localStorage.setItem('customTemplates', JSON.stringify(customTemplates));
+        displayCustomTemplates();
+        showSuccess('Template deleted successfully!');
+    }
+}
+
+// Load custom templates from localStorage
+function loadCustomTemplates() {
+    const stored = localStorage.getItem('customTemplates');
+    if (stored) {
+        try {
+            customTemplates = JSON.parse(stored);
+        } catch (e) {
+            customTemplates = [];
+        }
+    }
+    displayCustomTemplates();
+}
+
+// Initialize custom templates on load
+document.addEventListener('DOMContentLoaded', function() {
+    loadProblems();
+    loadCustomTemplates();
+});

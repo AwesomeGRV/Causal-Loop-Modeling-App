@@ -12,6 +12,13 @@ A web-based application for analyzing problems using systems thinking, root caus
 - **Remediation Planning**: Map short-term, long-term, and preventive solutions
 - **JSON Export/Import**: Structured data exchange
 
+### Template Library
+- **Industry-Specific Templates**: Healthcare, IT, Manufacturing, Education, Retail, Finance
+- **Problem-Type Templates**: Project delays, budget overruns, quality issues, team burnout, communication breakdown
+- **System Archetype Library**: Pre-built common patterns (limits to growth, tragedy of commons, etc.)
+- **Custom Templates**: Save and reuse your own problem analysis templates
+- **One-Click Loading**: Instantly load complete causal loop diagrams with causes, impacts, and feedback loops
+
 ### AI-Powered Analysis
 - **Intelligent Loop Detection**: Automatically suggest feedback loops from user input
 - **Pattern Recognition**: Identify common system archetypes (limits to growth, tragedy of commons, etc.)
@@ -106,6 +113,14 @@ The application uses a structured JSON format:
 1. **Explore Demo Examples**: Click on any example card in the "Demo Examples & Tutorials" section to see pre-built causal loop diagrams
 2. **Interactive Tutorial**: Select the "Interactive Tutorial" example to learn step-by-step how to build causal loop diagrams
 3. **Study Real-World Patterns**: Examine examples like Population Growth, Market Dynamics, Employee Burnout, Climate Change, and Social Media Addiction
+
+### Template Library
+
+1. **Browse Industry Templates**: Select "Industry Templates" to explore domain-specific patterns (Healthcare, IT, Manufacturing, Education, Retail, Finance)
+2. **Use Problem-Type Templates**: Choose "Problem Types" for common issues like project delays, budget overruns, quality issues, team burnout, and communication breakdown
+3. **Explore System Archetypes**: Access "System Archetypes" to understand fundamental patterns like limits to growth, tragedy of commons, escalation, and fixes that fail
+4. **Create Custom Templates**: Save your current analysis as a template for future reuse with "Save Current as Template"
+5. **Load Templates Instantly**: Click any template card to immediately load a complete causal loop diagram with pre-defined causes, impacts, and feedback loops
 
 ### AI-Powered Analysis
 
