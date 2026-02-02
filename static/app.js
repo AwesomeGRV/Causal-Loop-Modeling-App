@@ -9,6 +9,7 @@ let collaborationActive = false;
 let simulationSpeed = 5;
 let currentTimeStep = 0;
 let maxTimeSteps = 100;
+let aiAnalysisActive = false;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
@@ -1570,5 +1571,484 @@ function addActivityFeedEntry(message) {
     // Keep only last 10 entries
     while (feed.children.length > 10) {
         feed.removeChild(feed.firstChild);
+    }
+}
+
+// ==================== AI-POWERED ANALYSIS ====================
+
+// Toggle AI Analysis panel
+function toggleAIAnalysis() {
+    const btn = document.getElementById('aiAnalysisBtn');
+    const panel = document.getElementById('aiAnalysisPanel');
+    
+    if (aiAnalysisActive) {
+        aiAnalysisActive = false;
+        panel.classList.add('hidden');
+        btn.innerHTML = '<i class="fas fa-brain mr-2"></i>AI Analysis';
+        btn.className = 'bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition';
+    } else {
+        aiAnalysisActive = true;
+        panel.classList.remove('hidden');
+        btn.innerHTML = '<i class="fas fa-brain-slash mr-2"></i>Close AI';
+        btn.className = 'bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition';
+    }
+}
+
+// Toggle NLP Input section
+function toggleNLPInput() {
+    const section = document.getElementById('nlpInputSection');
+    section.classList.toggle('hidden');
+}
+
+// Run comprehensive AI analysis
+function runAIAnalysis() {
+    if (!currentProblem) {
+        showError('Please load a problem first');
+        return;
+    }
+    
+    showSuccess('Running AI analysis...');
+    
+    // Simulate AI processing with progressive updates
+    setTimeout(() => {
+        detectFeedbackLoops();
+        updateAIConfidence(25);
+    }, 500);
+    
+    setTimeout(() => {
+        identifySystemArchetype();
+        updateAIConfidence(50);
+    }, 1000);
+    
+    setTimeout(() => {
+        generateSmartRecommendations();
+        updateAIConfidence(75);
+    }, 1500);
+    
+    setTimeout(() => {
+        updateAIConfidence(95);
+        showSuccess('AI analysis completed!');
+    }, 2000);
+}
+
+// Intelligent Loop Detection
+function detectFeedbackLoops() {
+    const detectedLoopsDiv = document.getElementById('detectedLoops');
+    detectedLoopsDiv.innerHTML = '';
+    
+    const loops = [];
+    
+    // Analyze existing causes and impacts to find potential loops
+    if (currentProblem.causes && currentProblem.impacts) {
+        // Look for reinforcing patterns
+        const growthWords = ['increase', 'growth', 'expand', 'multiply', 'accelerate', 'compound'];
+        const declineWords = ['decrease', 'reduce', 'decline', 'shrink', 'contract', 'diminish'];
+        
+        // Check for growth loops
+        const growthCauses = currentProblem.causes.filter(cause => 
+            growthWords.some(word => cause.description.toLowerCase().includes(word))
+        );
+        
+        if (growthCauses.length > 0) {
+            loops.push({
+                type: 'reinforcing',
+                description: 'Growth Reinforcing Loop',
+                confidence: 0.85,
+                variables: growthCauses.map(c => c.description)
+            });
+        }
+        
+        // Check for balancing patterns
+        const balanceWords = ['balance', 'stabilize', 'regulate', 'control', 'maintain', 'equilibrium'];
+        const balanceCauses = currentProblem.causes.filter(cause => 
+            balanceWords.some(word => cause.description.toLowerCase().includes(word))
+        );
+        
+        if (balanceCauses.length > 0) {
+            loops.push({
+                type: 'balancing',
+                description: 'Balancing Loop',
+                confidence: 0.75,
+                variables: balanceCauses.map(c => c.description)
+            });
+        }
+        
+        // Detect delay patterns
+        const delayWords = ['delay', 'lag', 'wait', 'postpone', 'defer'];
+        const delayCauses = currentProblem.causes.filter(cause => 
+            delayWords.some(word => cause.description.toLowerCase().includes(word))
+        );
+        
+        if (delayCauses.length > 0) {
+            loops.push({
+                type: 'delay',
+                description: 'Delay Loop',
+                confidence: 0.70,
+                variables: delayCauses.map(c => c.description)
+            });
+        }
+    }
+    
+    // Display detected loops
+    if (loops.length > 0) {
+        loops.forEach(loop => {
+            const loopDiv = document.createElement('div');
+            loopDiv.className = `p-2 rounded ${loop.type === 'reinforcing' ? 'bg-green-100' : loop.type === 'balancing' ? 'bg-yellow-100' : 'bg-orange-100'}`;
+            loopDiv.innerHTML = `
+                <div class="font-medium text-sm">${loop.description}</div>
+                <div class="text-xs text-gray-600">Type: ${loop.type} | Confidence: ${(loop.confidence * 100).toFixed(0)}%</div>
+                <div class="text-xs text-gray-500 mt-1">Variables: ${loop.variables.slice(0, 2).join(', ')}${loop.variables.length > 2 ? '...' : ''}</div>
+            `;
+            detectedLoopsDiv.appendChild(loopDiv);
+        });
+    } else {
+        detectedLoopsDiv.innerHTML = '<div class="text-sm text-gray-600">No clear feedback loops detected</div>';
+    }
+}
+
+// Pattern Recognition for System Archetypes
+function identifySystemArchetype() {
+    const archetypeDiv = document.getElementById('systemArchetype');
+    archetypeDiv.innerHTML = '';
+    
+    const archetypes = [
+        {
+            name: 'Limits to Growth',
+            description: 'Growth process encounters limits that slow it down',
+            indicators: ['growth', 'limit', 'constraint', 'capacity', 'saturation'],
+            confidence: 0
+        },
+        {
+            name: 'Tragedy of the Commons',
+            description: 'Individual rational actions lead to collective disaster',
+            indicators: ['shared', 'resource', 'overuse', 'depletion', 'competition'],
+            confidence: 0
+        },
+        {
+            name: 'Success to the Successful',
+            description: 'Resources allocated to those already successful',
+            indicators: ['rich', 'poor', 'inequality', 'advantage', 'disadvantage'],
+            confidence: 0
+        },
+        {
+            name: 'Escalation',
+            description: 'Competitive actions lead to increasing intensity',
+            indicators: ['compete', 'escalate', 'arms race', 'conflict', 'tension'],
+            confidence: 0
+        },
+        {
+            name: 'Fixes that Fail',
+            description: 'Solutions make the problem worse over time',
+            indicators: ['fix', 'solution', 'worsen', 'side effect', 'unintended'],
+            confidence: 0
+        }
+    ];
+    
+    // Analyze problem text for archetype indicators
+    const problemText = `${currentProblem.title} ${currentProblem.description} ${(currentProblem.causes || []).map(c => c.description).join(' ')} ${(currentProblem.impacts || []).map(i => i.description).join(' ')}`.toLowerCase();
+    
+    archetypes.forEach(archetype => {
+        archetype.confidence = archetype.indicators.filter(indicator => 
+            problemText.includes(indicator)
+        ).length / archetype.indicators.length;
+    });
+    
+    // Sort by confidence and display top matches
+    archetypes.sort((a, b) => b.confidence - a.confidence);
+    
+    const topArchetype = archetypes[0];
+    if (topArchetype.confidence > 0.2) {
+        const archetypeCard = document.createElement('div');
+        archetypeCard.className = 'p-3 bg-white rounded border';
+        archetypeCard.innerHTML = `
+            <div class="font-medium text-sm">${topArchetype.name}</div>
+            <div class="text-xs text-gray-600 mt-1">${topArchetype.description}</div>
+            <div class="text-xs text-indigo-600 mt-2">Match: ${(topArchetype.confidence * 100).toFixed(0)}%</div>
+        `;
+        archetypeDiv.appendChild(archetypeCard);
+    } else {
+        archetypeDiv.innerHTML = '<div class="text-sm text-gray-600">No clear system archetype identified</div>';
+    }
+}
+
+// Smart Recommendations
+function generateSmartRecommendations() {
+    const causesDiv = document.getElementById('suggestedCauses');
+    const impactsDiv = document.getElementById('suggestedImpacts');
+    
+    causesDiv.innerHTML = '';
+    impactsDiv.innerHTML = '';
+    
+    // Cause recommendations based on problem domain
+    const causeRecommendations = getCausesByDomain(currentProblem.title, currentProblem.description);
+    const impactRecommendations = getImpactsByDomain(currentProblem.title, currentProblem.description);
+    
+    // Display suggested causes
+    causeRecommendations.forEach(cause => {
+        const causeDiv = document.createElement('div');
+        causeDiv.className = 'flex items-center gap-2 p-2 bg-white rounded border hover:bg-gray-50 cursor-pointer';
+        causeDiv.innerHTML = `
+            <i class="fas fa-plus text-green-600 text-xs"></i>
+            <span class="text-xs">${cause.description}</span>
+            <span class="text-xs text-gray-500">${cause.type}</span>
+        `;
+        causeDiv.onclick = () => addSuggestedCause(cause);
+        causesDiv.appendChild(causeDiv);
+    });
+    
+    // Display suggested impacts
+    impactRecommendations.forEach(impact => {
+        const impactDiv = document.createElement('div');
+        impactDiv.className = 'flex items-center gap-2 p-2 bg-white rounded border hover:bg-gray-50 cursor-pointer';
+        impactDiv.innerHTML = `
+            <i class="fas fa-plus text-blue-600 text-xs"></i>
+            <span class="text-xs">${impact.description}</span>
+            <span class="text-xs text-gray-500">${impact.type}</span>
+        `;
+        impactDiv.onclick = () => addSuggestedImpact(impact);
+        impactsDiv.appendChild(impactDiv);
+    });
+}
+
+// Get cause recommendations by domain
+function getCausesByDomain(title, description) {
+    const text = `${title} ${description}`.toLowerCase();
+    
+    const domainCauses = {
+        business: [
+            { description: 'Market competition', type: 'primary' },
+            { description: 'Economic conditions', type: 'secondary' },
+            { description: 'Customer demand changes', type: 'primary' },
+            { description: 'Supply chain disruptions', type: 'secondary' },
+            { description: 'Regulatory changes', type: 'latent' }
+        ],
+        healthcare: [
+            { description: 'Patient volume', type: 'primary' },
+            { description: 'Staff shortages', type: 'primary' },
+            { description: 'Budget constraints', type: 'secondary' },
+            { description: 'Technology limitations', type: 'secondary' },
+            { description: 'Policy changes', type: 'latent' }
+        ],
+        education: [
+            { description: 'Student engagement', type: 'primary' },
+            { description: 'Teacher workload', type: 'primary' },
+            { description: 'Resource availability', type: 'secondary' },
+            { description: 'Curriculum changes', type: 'secondary' },
+            { description: 'Socioeconomic factors', type: 'latent' }
+        ],
+        technology: [
+            { description: 'Technical debt', type: 'primary' },
+            { description: 'System complexity', type: 'primary' },
+            { description: 'Skill gaps', type: 'secondary' },
+            { description: 'Budget limitations', type: 'secondary' },
+            { description: 'Rapid technology changes', type: 'latent' }
+        ],
+        environment: [
+            { description: 'Climate change', type: 'primary' },
+            { description: 'Resource depletion', type: 'primary' },
+            { description: 'Pollution levels', type: 'secondary' },
+            { description: 'Policy enforcement', type: 'secondary' },
+            { description: 'Global economic factors', type: 'latent' }
+        ]
+    };
+    
+    // Determine domain based on keywords
+    let domain = 'business'; // default
+    if (text.includes('health') || text.includes('patient') || text.includes('medical')) domain = 'healthcare';
+    else if (text.includes('education') || text.includes('student') || text.includes('teacher')) domain = 'education';
+    else if (text.includes('technology') || text.includes('software') || text.includes('system')) domain = 'technology';
+    else if (text.includes('environment') || text.includes('climate') || text.includes('pollution')) domain = 'environment';
+    
+    return domainCauses[domain] || domainCauses.business;
+}
+
+// Get impact recommendations by domain
+function getImpactsByDomain(title, description) {
+    const text = `${title} ${description}`.toLowerCase();
+    
+    const domainImpacts = {
+        business: [
+            { description: 'Revenue decline', type: 'business' },
+            { description: 'Customer satisfaction', type: 'business' },
+            { description: 'Employee turnover', type: 'operational' },
+            { description: 'Market share loss', type: 'business' },
+            { description: 'Operational efficiency', type: 'operational' }
+        ],
+        healthcare: [
+            { description: 'Patient outcomes', type: 'health' },
+            { description: 'Staff burnout', type: 'operational' },
+            { description: 'Care quality', type: 'health' },
+            { description: 'Wait times', type: 'operational' },
+            { description: 'Cost increases', type: 'business' }
+        ],
+        education: [
+            { description: 'Student performance', type: 'educational' },
+            { description: 'Teacher retention', type: 'operational' },
+            { description: 'Learning outcomes', type: 'educational' },
+            { description: 'Graduation rates', type: 'educational' },
+            { description: 'Resource utilization', type: 'operational' }
+        ],
+        technology: [
+            { description: 'System reliability', type: 'technical' },
+            { description: 'User experience', type: 'technical' },
+            { description: 'Development velocity', type: 'operational' },
+            { description: 'Security vulnerabilities', type: 'technical' },
+            { description: 'Maintenance costs', type: 'business' }
+        ],
+        environment: [
+            { description: 'Ecosystem damage', type: 'environmental' },
+            { description: 'Public health', type: 'health' },
+            { description: 'Economic impact', type: 'business' },
+            { description: 'Biodiversity loss', type: 'environmental' },
+            { description: 'Community displacement', type: 'operational' }
+        ]
+    };
+    
+    // Determine domain based on keywords
+    let domain = 'business'; // default
+    if (text.includes('health') || text.includes('patient') || text.includes('medical')) domain = 'healthcare';
+    else if (text.includes('education') || text.includes('student') || text.includes('teacher')) domain = 'education';
+    else if (text.includes('technology') || text.includes('software') || text.includes('system')) domain = 'technology';
+    else if (text.includes('environment') || text.includes('climate') || text.includes('pollution')) domain = 'environment';
+    
+    return domainImpacts[domain] || domainImpacts.business;
+}
+
+// Add suggested cause to current problem
+function addSuggestedCause(cause) {
+    if (!currentProblem.causes) currentProblem.causes = [];
+    currentProblem.causes.push(cause);
+    displayCauses(currentProblem.causes);
+    showSuccess(`Added cause: ${cause.description}`);
+}
+
+// Add suggested impact to current problem
+function addSuggestedImpact(impact) {
+    if (!currentProblem.impacts) currentProblem.impacts = [];
+    currentProblem.impacts.push(impact);
+    displayImpacts(currentProblem.impacts);
+    showSuccess(`Added impact: ${impact.description}`);
+}
+
+// Natural Language Processing for problem description
+function processNLPInput() {
+    const input = document.getElementById('nlpTextInput').value.trim();
+    if (!input) {
+        showError('Please enter a problem description');
+        return;
+    }
+    
+    showSuccess('Processing natural language input...');
+    
+    // Simulate NLP processing
+    setTimeout(() => {
+        const extractedData = analyzeText(input);
+        
+        // Create new problem from extracted data
+        const newProblem = {
+            title: extractedData.title,
+            description: input,
+            causes: extractedData.causes,
+            impacts: extractedData.impacts,
+            feedback_loops: extractedData.feedback_loops,
+            remediations: []
+        };
+        
+        // Load the generated problem
+        currentProblem = newProblem;
+        document.getElementById('detailsSection').classList.remove('hidden');
+        document.getElementById('diagramSection').classList.remove('hidden');
+        document.getElementById('problemTitle').textContent = newProblem.title;
+        displayCauses(newProblem.causes || []);
+        displayImpacts(newProblem.impacts || []);
+        displayLoops(newProblem.feedback_loops || []);
+        displayRemediations(newProblem.remediations || []);
+        createCausalDiagram(newProblem);
+        
+        // Clear NLP input
+        document.getElementById('nlpTextInput').value = '';
+        document.getElementById('nlpInputSection').classList.add('hidden');
+        
+        showSuccess('Diagram generated from natural language input!');
+    }, 1500);
+}
+
+// Analyze text and extract causal relationships
+function analyzeText(text) {
+    const lowerText = text.toLowerCase();
+    
+    // Extract title (first sentence or key phrase)
+    const sentences = text.split(/[.!?]+/);
+    const title = sentences[0].trim() || 'Generated Problem';
+    
+    // Extract causes (look for cause indicators)
+    const causeIndicators = ['because', 'due to', 'caused by', 'result of', 'since', 'as', 'given'];
+    const causes = [];
+    
+    causeIndicators.forEach(indicator => {
+        const regex = new RegExp(`${indicator}\\s+([^,.!?]+)`, 'gi');
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+            const cause = match[1].trim();
+            if (cause.length > 5) {
+                causes.push({
+                    description: cause.charAt(0).toUpperCase() + cause.slice(1),
+                    type: 'primary'
+                });
+            }
+        }
+    });
+    
+    // Extract impacts (look for effect indicators)
+    const impactIndicators = ['leads to', 'results in', 'causes', 'creates', 'produces'];
+    const impacts = [];
+    
+    impactIndicators.forEach(indicator => {
+        const regex = new RegExp(`([^,.!?]+)\\s+${indicator}\\s+([^,.!?]+)`, 'gi');
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+            const impact = match[2].trim();
+            if (impact.length > 5) {
+                impacts.push({
+                    description: impact.charAt(0).toUpperCase() + impact.slice(1),
+                    type: 'operational'
+                });
+            }
+        }
+    });
+    
+    // Generate feedback loops based on patterns
+    const feedback_loops = [];
+    if (lowerText.includes('cycle') || lowerText.includes('vicious') || lowerText.includes('virtuous')) {
+        feedback_loops.push({
+            description: 'Detected cyclical pattern',
+            type: lowerText.includes('vicious') ? 'reinforcing' : 'balancing',
+            relationships: []
+        });
+    }
+    
+    return {
+        title: title,
+        causes: causes.slice(0, 5), // Limit to 5 causes
+        impacts: impacts.slice(0, 5), // Limit to 5 impacts
+        feedback_loops: feedback_loops
+    };
+}
+
+// Update AI confidence score
+function updateAIConfidence(confidence) {
+    const bar = document.getElementById('aiConfidenceBar');
+    const text = document.getElementById('aiConfidenceText');
+    
+    bar.style.width = `${confidence}%`;
+    text.textContent = `${confidence}%`;
+    
+    // Change color based on confidence level
+    if (confidence >= 80) {
+        bar.className = 'bg-green-600 h-2 rounded-full transition-all duration-500';
+    } else if (confidence >= 60) {
+        bar.className = 'bg-yellow-600 h-2 rounded-full transition-all duration-500';
+    } else {
+        bar.className = 'bg-red-600 h-2 rounded-full transition-all duration-500';
     }
 }

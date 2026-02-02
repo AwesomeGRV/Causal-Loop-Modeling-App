@@ -12,6 +12,14 @@ A web-based application for analyzing problems using systems thinking, root caus
 - **Remediation Planning**: Map short-term, long-term, and preventive solutions
 - **JSON Export/Import**: Structured data exchange
 
+### AI-Powered Analysis
+- **Intelligent Loop Detection**: Automatically suggest feedback loops from user input
+- **Pattern Recognition**: Identify common system archetypes (limits to growth, tragedy of commons, etc.)
+- **Smart Recommendations**: Suggest potential causes and impacts based on problem description
+- **Natural Language Processing**: Allow users to describe problems in plain text and auto-generate diagrams
+- **AI Confidence Scoring**: Visual indicators of analysis reliability
+- **Domain-Specific Insights**: Tailored recommendations for business, healthcare, education, technology, and environmental domains
+
 ### Advanced Visualization & Interactivity
 - **Animated Loop Simulation**: Watch variables change over time in reinforcing/balancing loops
 - **Scenario Testing**: Adjust variables in real-time and see system behavior changes
@@ -98,6 +106,15 @@ The application uses a structured JSON format:
 1. **Explore Demo Examples**: Click on any example card in the "Demo Examples & Tutorials" section to see pre-built causal loop diagrams
 2. **Interactive Tutorial**: Select the "Interactive Tutorial" example to learn step-by-step how to build causal loop diagrams
 3. **Study Real-World Patterns**: Examine examples like Population Growth, Market Dynamics, Employee Burnout, Climate Change, and Social Media Addiction
+
+### AI-Powered Analysis
+
+1. **Enable AI Analysis**: Click "AI Analysis" to open the intelligent analysis panel
+2. **Run Analysis**: Click "Analyze" to automatically detect feedback loops and system patterns
+3. **Natural Language Input**: Use "NLP Input" to describe problems in plain text and auto-generate diagrams
+4. **Review Suggestions**: Examine AI-detected loops, system archetypes, and smart recommendations
+5. **Apply Recommendations**: Click on suggested causes and impacts to add them to your model
+6. **Monitor Confidence**: Check the AI confidence score to assess analysis reliability
 
 ### Advanced Simulation Features
 
