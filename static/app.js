@@ -11,6 +11,9 @@ let currentTimeStep = 0;
 let maxTimeSteps = 100;
 let aiAnalysisActive = false;
 let customTemplates = [];
+let socket = null;
+let d3Visualizer = null;
+let mlModelsLoaded = false;
 
 // Performance optimization variables
 let simulationInterval = null;
@@ -28,8 +31,345 @@ let performanceMetrics = {
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
+    initializeWebSocket();
+    initializeD3Visualizer();
     loadProblems();
 });
+
+// Initialize WebSocket connection
+function initializeWebSocket() {
+    socket = io();
+    
+    socket.on('connect', function() {
+        console.log('Connected to server');
+        updateConnectionStatus(true);
+    });
+    
+    socket.on('disconnect', function() {
+        console.log('Disconnected from server');
+        updateConnectionStatus(false);
+    });
+    
+    socket.on('analysis_update', function(data) {
+        handleRealTimeAnalysis(data);
+    });
+    
+    socket.on('system_stats', function(data) {
+        updateSystemStats(data);
+    });
+    
+    socket.on('models_updated', function(data) {
+        handleModelsUpdated(data);
+    });
+    
+    socket.on('problem_added', function(data) {
+        handleProblemAdded(data);
+    });
+}
+
+// Initialize D3 visualizer
+function initializeD3Visualizer() {
+    if (typeof D3CausalLoopVisualizer !== 'undefined') {
+        d3Visualizer = new D3CausalLoopVisualizer('d3Diagram');
+    }
+}
+
+// Update connection status indicator
+function updateConnectionStatus(connected) {
+    const statusElement = document.getElementById('connectionStatus');
+    if (statusElement) {
+        statusElement.className = connected ? 
+            'inline-block w-2 h-2 bg-green-500 rounded-full' : 
+            'inline-block w-2 h-2 bg-red-500 rounded-full';
+        statusElement.title = connected ? 'Connected' : 'Disconnected';
+    }
+}
+
+// Handle real-time analysis updates
+function handleRealTimeAnalysis(data) {
+    const { problem_id, type, analysis_data } = data;
+    
+    if (currentProblem && currentProblem.id === problem_id) {
+        switch (type) {
+            case 'archetype_prediction':
+                displayArchetypePrediction(analysis_data);
+                break;
+            case 'loop_suggestions':
+                displayLoopSuggestions(analysis_data);
+                break;
+            case 'impact_prediction':
+                displayImpactPrediction(analysis_data);
+                break;
+            case 'simulation':
+                displaySimulationResults(analysis_data);
+                break;
+        }
+    }
+}
+
+// Display archetype prediction
+function displayArchetypePrediction(data) {
+    const container = document.getElementById('archetypePrediction');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <h4 class="font-semibold text-gray-800 mb-2">System Archetype Prediction</h4>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium">Predicted Archetype:</span>
+                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">${data.predicted_archetype}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium">Confidence:</span>
+                    <span class="text-sm">${(data.confidence * 100).toFixed(1)}%</span>
+                </div>
+                <div class="mt-3">
+                    <div class="text-sm font-medium mb-1">Probability Distribution:</div>
+                    ${Object.entries(data.probability_distribution)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 3)
+                        .map(([archetype, prob]) => `
+                            <div class="flex justify-between items-center py-1">
+                                <span class="text-xs">${archetype}</span>
+                                <div class="flex items-center">
+                                    <div class="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: ${prob * 100}%"></div>
+                                    </div>
+                                    <span class="text-xs">${(prob * 100).toFixed(1)}%</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Display loop suggestions
+function displayLoopSuggestions(data) {
+    const container = document.getElementById('loopSuggestions');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <h4 class="font-semibold text-gray-800 mb-2">AI Loop Suggestions</h4>
+            <div class="space-y-2">
+                ${data.suggested_loops.map((loop, index) => `
+                    <div class="flex items-start space-x-2 p-2 bg-gray-50 rounded">
+                        <span class="inline-block px-2 py-1 text-xs rounded ${
+                            loop.type === 'reinforcing' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }">
+                            ${loop.type === 'reinforcing' ? 'R' : 'B'}
+                        </span>
+                        <div class="flex-1">
+                            <p class="text-sm">${loop.description}</p>
+                            <p class="text-xs text-gray-500">Confidence: ${(loop.confidence * 100).toFixed(1)}%</p>
+                        </div>
+                        <button onclick="addSuggestedLoop(${index})" class="text-blue-600 hover:text-blue-700">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+    
+    // Store suggestions globally for access
+    window.currentLoopSuggestions = data.suggested_loops;
+}
+
+// Display impact prediction
+function displayImpactPrediction(data) {
+    const container = document.getElementById('impactPrediction');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <h4 class="font-semibold text-gray-800 mb-2">Impact Prediction</h4>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium">Predicted Impact Count:</span>
+                    <span class="text-sm">${data.predicted_impact_count}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium">Confidence:</span>
+                    <span class="text-sm">${(data.confidence * 100).toFixed(1)}%</span>
+                </div>
+                <div class="mt-3">
+                    <div class="text-sm font-medium mb-1">Predicted Impact Types:</div>
+                    ${Object.entries(data.predicted_types)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([type, prob]) => `
+                            <div class="flex justify-between items-center py-1">
+                                <span class="text-xs capitalize">${type}</span>
+                                <div class="flex items-center">
+                                    <div class="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                                        <div class="bg-purple-500 h-2 rounded-full" style="width: ${prob * 100}%"></div>
+                                    </div>
+                                    <span class="text-xs">${(prob * 100).toFixed(1)}%</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Display simulation results
+function displaySimulationResults(data) {
+    const container = document.getElementById('simulationResults');
+    if (!container) return;
+    
+    if (data.error) {
+        container.innerHTML = `
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p class="text-red-800 text-sm">Simulation error: ${data.error}</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <h4 class="font-semibold text-gray-800 mb-2">Loop Dynamics Simulation</h4>
+            <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="text-sm font-medium">Reinforcing Loops</div>
+                        <div class="text-lg">${data.reinforcing_loops.count}</div>
+                        <div class="text-xs text-gray-500">Final values: ${data.reinforcing_loops.final_values.map(v => v.toFixed(2)).join(', ')}</div>
+                    </div>
+                    <div>
+                        <div class="text-sm font-medium">Balancing Loops</div>
+                        <div class="text-lg">${data.balancing_loops.count}</div>
+                        <div class="text-xs text-gray-500">Final values: ${data.balancing_loops.final_values.map(v => v.toFixed(2)).join(', ')}</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-sm font-medium">System Stability</div>
+                    <div class="flex items-center space-x-2">
+                        <div class="flex-1 bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-500 h-2 rounded-full" style="width: ${data.system_stability.stability_score * 100}%"></div>
+                        </div>
+                        <span class="text-sm">${data.system_stability.behavior}</span>
+                    </div>
+                </div>
+                <div id="simulationChart" class="h-48"></div>
+            </div>
+        </div>
+    `;
+    
+    // Create simulation chart
+    createSimulationChart(data);
+}
+
+// Create simulation chart using Plotly
+function createSimulationChart(data) {
+    const chartContainer = document.getElementById('simulationChart');
+    if (!chartContainer) return;
+    
+    const traces = [];
+    
+    // Add reinforcing loops
+    if (data.reinforcing_loops.count > 0) {
+        for (let i = 0; i < data.reinforcing_loops.count; i++) {
+            traces.push({
+                x: data.time_points,
+                y: data.reinforcing_loops.history.map(step => step[i] || 0),
+                type: 'scatter',
+                mode: 'lines',
+                name: `Reinforcing ${i + 1}`,
+                line: { color: '#2ecc71' }
+            });
+        }
+    }
+    
+    // Add balancing loops
+    if (data.balancing_loops.count > 0) {
+        for (let i = 0; i < data.balancing_loops.count; i++) {
+            traces.push({
+                x: data.time_points,
+                y: data.balancing_loops.history.map(step => step[i] || 0),
+                type: 'scatter',
+                mode: 'lines',
+                name: `Balancing ${i + 1}`,
+                line: { color: '#e74c3c' }
+            });
+        }
+    }
+    
+    const layout = {
+        title: 'Loop Dynamics Over Time',
+        xaxis: { title: 'Time' },
+        yaxis: { title: 'Value' },
+        margin: { t: 30, r: 20, b: 40, l: 50 },
+        height: 200
+    };
+    
+    Plotly.newPlot(chartContainer, traces, layout, {responsive: true});
+}
+
+// Update system statistics
+function updateSystemStats(data) {
+    const statsContainer = document.getElementById('systemStats');
+    if (!statsContainer) return;
+    
+    statsContainer.innerHTML = `
+        <div class="grid grid-cols-4 gap-2 text-xs">
+            <div class="text-center">
+                <div class="font-semibold">${data.total_problems}</div>
+                <div class="text-gray-500">Problems</div>
+            </div>
+            <div class="text-center">
+                <div class="font-semibold">${data.total_causes}</div>
+                <div class="text-gray-500">Causes</div>
+            </div>
+            <div class="text-center">
+                <div class="font-semibold">${data.total_impacts}</div>
+                <div class="text-gray-500">Impacts</div>
+            </div>
+            <div class="text-center">
+                <div class="font-semibold">${data.total_loops}</div>
+                <div class="text-gray-500">Loops</div>
+            </div>
+        </div>
+    `;
+}
+
+// Handle models updated event
+function handleModelsUpdated(data) {
+    console.log('Models updated:', data);
+    mlModelsLoaded = true;
+    
+    // Show notification
+    showNotification(`${data.type} models trained successfully`, 'success');
+}
+
+// Handle problem added event
+function handleProblemAdded(data) {
+    problems.push(data);
+    displayProblems();
+    showNotification('New problem added', 'info');
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        'bg-blue-500 text-white'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
 
 // Load all problems
 async function loadProblems() {
@@ -2763,3 +3103,409 @@ document.addEventListener('DOMContentLoaded', function() {
     loadProblems();
     loadCustomTemplates();
 });
+
+// ML and Predictive Analytics Functions
+
+// Train ML models
+async function trainMLModels() {
+    try {
+        showNotification('Training ML models...', 'info');
+        
+        const response = await fetch('/api/ml/train-patterns', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.error) {
+            showNotification(`Training failed: ${result.error}`, 'error');
+        } else {
+            showNotification('ML models trained successfully!', 'success');
+        }
+    } catch (error) {
+        console.error('Error training ML models:', error);
+        showNotification('Failed to train ML models', 'error');
+    }
+}
+
+// Train predictive models
+async function trainPredictiveModels() {
+    try {
+        showNotification('Training predictive models...', 'info');
+        
+        const response = await fetch('/api/predictive/train-models', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.time_series.error && result.impact_predictor.error) {
+            showNotification('Failed to train predictive models', 'error');
+        } else {
+            showNotification('Predictive models trained successfully!', 'success');
+        }
+    } catch (error) {
+        console.error('Error training predictive models:', error);
+        showNotification('Failed to train predictive models', 'error');
+    }
+}
+
+// Predict system archetype
+async function predictArchetype(problemId) {
+    try {
+        const response = await fetch(`/api/ml/predict-archetype/${problemId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.error) {
+            showNotification(`Prediction failed: ${result.error}`, 'error');
+        } else {
+            displayArchetypePrediction(result);
+        }
+    } catch (error) {
+        console.error('Error predicting archetype:', error);
+        showNotification('Failed to predict archetype', 'error');
+    }
+}
+
+// Detect anomalies
+async function detectAnomalies() {
+    try {
+        showNotification('Detecting anomalies...', 'info');
+        
+        const response = await fetch('/api/ml/detect-anomalies', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.error) {
+            showNotification(`Anomaly detection failed: ${result.error}`, 'error');
+        } else {
+            displayAnomalies(result);
+        }
+    } catch (error) {
+        console.error('Error detecting anomalies:', error);
+        showNotification('Failed to detect anomalies', 'error');
+    }
+}
+
+// Display anomalies
+function displayAnomalies(data) {
+    const container = document.getElementById('anomalyResults');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <h4 class="font-semibold text-gray-800 mb-2">Anomaly Detection Results</h4>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium">Anomalies Found:</span>
+                    <span class="text-sm">${data.anomalies_detected}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium">Total Analyzed:</span>
+                    <span class="text-sm">${data.total_analyzed}</span>
+                </div>
+                ${data.anomalies.length > 0 ? `
+                    <div class="mt-3">
+                        <div class="text-sm font-medium mb-2">Anomalous Problems:</div>
+                        ${data.anomalies.map(anomaly => `
+                            <div class="p-2 bg-red-50 rounded border border-red-200">
+                                <div class="text-sm font-medium">${anomaly.title}</div>
+                                <div class="text-xs text-gray-500">Anomaly score: ${anomaly.anomaly_score.toFixed(3)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<div class="text-sm text-green-600">No anomalies detected</div>'}
+            </div>
+        </div>
+    `;
+}
+
+// Cluster problems
+async function clusterProblems() {
+    try {
+        showNotification('Clustering problems...', 'info');
+        
+        const response = await fetch('/api/ml/cluster-problems', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.error) {
+            showNotification(`Clustering failed: ${result.error}`, 'error');
+        } else {
+            displayClusters(result);
+        }
+    } catch (error) {
+        console.error('Error clustering problems:', error);
+        showNotification('Failed to cluster problems', 'error');
+    }
+}
+
+// Display clusters
+function displayClusters(data) {
+    const container = document.getElementById('clusterResults');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <h4 class="font-semibold text-gray-800 mb-2">Problem Clustering Results</h4>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium">Number of Clusters:</span>
+                    <span class="text-sm">${data.n_clusters}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium">Silhouette Score:</span>
+                    <span class="text-sm">${data.silhouette_score.toFixed(3)}</span>
+                </div>
+                <div class="mt-3">
+                    <div class="text-sm font-medium mb-2">Clusters:</div>
+                    ${Object.entries(data.clusters).map(([clusterId, problems]) => `
+                        <div class="mb-3">
+                            <div class="text-sm font-medium text-blue-600">Cluster ${clusterId} (${problems.length} problems)</div>
+                            <div class="ml-4 space-y-1">
+                                ${problems.map(problem => `
+                                    <div class="text-xs text-gray-600">• ${problem.title}</div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div id="clusterVisualization" class="h-64 mt-4"></div>
+            </div>
+        </div>
+    `;
+    
+    // Create D3 cluster visualization
+    if (d3Visualizer) {
+        setTimeout(() => {
+            d3Visualizer.createClusterVisualization('clusterVisualization', data.clusters);
+        }, 100);
+    }
+}
+
+// Suggest feedback loops
+async function suggestLoops(problemId) {
+    try {
+        const response = await fetch(`/api/ml/suggest-loops/${problemId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.error) {
+            showNotification(`Loop suggestion failed: ${result.error}`, 'error');
+        } else {
+            displayLoopSuggestions(result);
+        }
+    } catch (error) {
+        console.error('Error suggesting loops:', error);
+        showNotification('Failed to suggest loops', 'error');
+    }
+}
+
+// Add suggested loop to current problem
+function addSuggestedLoop(index) {
+    if (!window.currentLoopSuggestions || !window.currentLoopSuggestions[index]) return;
+    
+    const suggestion = window.currentLoopSuggestions[index];
+    
+    if (!currentProblem.feedback_loops) {
+        currentProblem.feedback_loops = [];
+    }
+    
+    // Add the suggested loop
+    currentProblem.feedback_loops.push({
+        description: suggestion.description,
+        type: suggestion.type,
+        relationships: [suggestion.description]
+    });
+    
+    // Update display
+    displayLoops(currentProblem.feedback_loops);
+    createCausalDiagram(currentProblem);
+    
+    showNotification('Suggested loop added!', 'success');
+}
+
+// Get trend forecast
+async function getForecast(days = 30) {
+    try {
+        const response = await fetch(`/api/predictive/forecast?days=${days}`);
+        const result = await response.json();
+        
+        if (result.error) {
+            showNotification(`Forecast failed: ${result.error}`, 'error');
+        } else {
+            displayForecast(result);
+        }
+    } catch (error) {
+        console.error('Error getting forecast:', error);
+        showNotification('Failed to get forecast', 'error');
+    }
+}
+
+// Display forecast
+function displayForecast(data) {
+    const container = document.getElementById('forecastResults');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <h4 class="font-semibold text-gray-800 mb-2">Trend Forecast</h4>
+            <div class="space-y-3">
+                ${Object.entries(data).map(([metric, forecast]) => `
+                    <div>
+                        <div class="text-sm font-medium capitalize">${metric.replace('_', ' ')}</div>
+                        <div class="text-xs text-gray-500">Trend: ${forecast.current_trend}</div>
+                        <div id="forecast-${metric}" class="h-32 mt-2"></div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+    
+    // Create forecast charts
+    Object.entries(data).forEach(([metric, forecast]) => {
+        const chartData = forecast.dates.map((date, index) => ({
+            date: date,
+            value: forecast.predictions[index]
+        }));
+        
+        if (d3Visualizer) {
+            setTimeout(() => {
+                d3Visualizer.createTimeSeriesChart(`forecast-${metric}`, chartData);
+            }, 100);
+        }
+    });
+}
+
+// Predict impacts for current problem
+async function predictImpacts(problemId) {
+    try {
+        const response = await fetch(`/api/predictive/predict-impacts/${problemId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.error) {
+            showNotification(`Impact prediction failed: ${result.error}`, 'error');
+        } else {
+            displayImpactPrediction(result);
+        }
+    } catch (error) {
+        console.error('Error predicting impacts:', error);
+        showNotification('Failed to predict impacts', 'error');
+    }
+}
+
+// Run loop dynamics simulation
+async function runSimulation(problemId, timeSteps = 50) {
+    try {
+        showNotification('Running simulation...', 'info');
+        
+        const response = await fetch(`/api/predictive/simulate/${problemId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ time_steps: timeSteps })
+        });
+        
+        const result = await response.json();
+        
+        if (result.error) {
+            showNotification(`Simulation failed: ${result.error}`, 'error');
+        } else {
+            displaySimulationResults(result);
+        }
+    } catch (error) {
+        console.error('Error running simulation:', error);
+        showNotification('Failed to run simulation', 'error');
+    }
+}
+
+// Request real-time analysis
+function requestRealTimeAnalysis(problemId) {
+    if (socket) {
+        socket.emit('request_real_time_analysis', { problem_id: problemId });
+        showNotification('Real-time analysis started...', 'info');
+    }
+}
+
+// Switch to D3 visualization
+function switchToD3Visualization() {
+    if (!d3Visualizer || !currentProblem) return;
+    
+    // Hide Vis.js diagram
+    const visContainer = document.getElementById('causalDiagram');
+    if (visContainer) {
+        visContainer.style.display = 'none';
+    }
+    
+    // Show D3 diagram
+    const d3Container = document.getElementById('d3Diagram');
+    if (d3Container) {
+        d3Container.style.display = 'block';
+        d3Container.style.height = '400px';
+        d3Container.style.border = '1px solid #e5e7eb';
+        d3Container.style.borderRadius = '8px';
+        
+        // Load data and render
+        d3Visualizer.loadData(currentProblem);
+    }
+    
+    showNotification('Switched to D3 visualization', 'success');
+}
+
+// Switch back to Vis.js visualization
+function switchToVisVisualization() {
+    // Show Vis.js diagram
+    const visContainer = document.getElementById('causalDiagram');
+    if (visContainer) {
+        visContainer.style.display = 'block';
+    }
+    
+    // Hide D3 diagram
+    const d3Container = document.getElementById('d3Diagram');
+    if (d3Container) {
+        d3Container.style.display = 'none';
+    }
+    
+    showNotification('Switched to Vis.js visualization', 'success');
+}
+
+// Export D3 diagram as SVG
+function exportD3Diagram() {
+    if (d3Visualizer) {
+        d3Visualizer.exportAsSVG();
+    }
+}
